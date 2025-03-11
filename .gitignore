@@ -1,20 +1,52 @@
-# .NET
+# .NET Core
 bin/
 obj/
 *.user
+*.userosscache
 *.suo
-*.sln.ide
-*.sln.docstates
 *.userprefs
-
-# Visual Studio
 .vs/
 .vscode/
+*.swp
+*.*~
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Конфигурационные файлы с чувствительными данными
+appsettings.json
+appsettings.Development.json
+appsettings.*.json
+
+# Логи
+*.log
+logs/
+
+# Сертификаты
+*.pfx
+*.cer
+*.pem
+*.key
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+*.sln.iml
+
+# Visual Studio
 *.sln.ide
 *.sln.docstates
 
 # Rider
-.idea/
 *.sln.iml
 
 # NuGet
@@ -22,9 +54,6 @@ obj/
 *.snupkg
 packages/
 *.nuspec
-
-# Logs
-*.log
 
 # Build results
 [Dd]ebug/
