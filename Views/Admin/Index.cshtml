@@ -1,0 +1,137 @@
+@model IEnumerable<LdapSource>
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Админ-панель AD Tels</h1>
+        <p class="lead">Управление телефонным справочником на основе данных из LDAP сервера</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">LDAP-источники</div>
+            <div class="card-body">
+                <h5 class="card-title">@Model.Count()</h5>
+                <p class="card-text">Настроенных LDAP-источников</p>
+                <a asp-action="LdapSources" class="btn btn-light">Управление источниками</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Контакты</div>
+            <div class="card-body">
+                <h5 class="card-title">@ViewBag.TotalContacts</h5>
+                <p class="card-text">Контактов в справочнике</p>
+                <a asp-action="Contacts" class="btn btn-light">Просмотр контактов</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Отделы</div>
+            <div class="card-body">
+                <h5 class="card-title">@ViewBag.TotalDepartments</h5>
+                <p class="card-text">Отделов в справочнике</p>
+                <a asp-action="Departments" class="btn btn-light">Просмотр отделов</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">LDAP-источники</h5>
+                <div>
+                    <a asp-action="CreateLdapSource" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle"></i> Добавить источник
+                    </a>
+                    <form asp-action="SyncAllLdapSources" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-arrow-repeat"></i> Синхронизировать все
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        Нет настроенных LDAP-источников. <a asp-action="CreateLdapSource">Добавить новый источник</a>.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Сервер</th>
+                                    <th>Порт</th>
+                                    <th>Статус</th>
+                                    <th>Последняя синхронизация</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var source in Model)
+                                {
+                                    <tr>
+                                        <td>@source.Name</td>
+                                        <td>@source.Server</td>
+                                        <td>@source.Port</td>
+                                        <td>
+                                            @if (source.IsActive)
+                                            {
+                                                <span class="badge bg-success">Активен</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Неактивен</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (source.LastSyncTime != default)
+                                            {
+                                                @source.LastSyncTime.ToString("dd.MM.yyyy HH:mm:ss")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Никогда</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="LdapSourceDetails" asp-route-id="@source.Id" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a asp-action="EditLdapSource" asp-route-id="@source.Id" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="DeleteLdapSource" asp-route-id="@source.Id" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                                <form asp-action="SyncLdapSource" asp-route-id="@source.Id" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,113 @@
+@model IEnumerable<LdapSource>
+@{
+    ViewData["Title"] = "LDAP-источники";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>LDAP-источники</h1>
+    <div>
+        <a asp-action="CreateLdapSource" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить источник
+        </a>
+        <form asp-action="SyncAllLdapSources" method="post" class="d-inline">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-arrow-repeat"></i> Синхронизировать все
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Нет настроенных LDAP-источников. <a asp-action="CreateLdapSource">Добавить новый источник</a>.
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Сервер</th>
+                            <th>Порт</th>
+                            <th>Base DN</th>
+                            <th>SSL</th>
+                            <th>Статус</th>
+                            <th>Последняя синхронизация</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var source in Model)
+                        {
+                            <tr>
+                                <td>@source.Id</td>
+                                <td>@source.Name</td>
+                                <td>@source.Server</td>
+                                <td>@source.Port</td>
+                                <td>@source.BaseDn</td>
+                                <td>
+                                    @if (source.UseSSL)
+                                    {
+                                        <span class="badge bg-success">Да</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Нет</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (source.IsActive)
+                                    {
+                                        <span class="badge bg-success">Активен</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Неактивен</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (source.LastSyncTime != default)
+                                    {
+                                        @source.LastSyncTime.ToString("dd.MM.yyyy HH:mm:ss")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Никогда</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="LdapSourceDetails" asp-route-id="@source.Id" class="btn btn-sm btn-info" title="Подробности">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="EditLdapSource" asp-route-id="@source.Id" class="btn btn-sm btn-warning" title="Редактировать">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="DeleteLdapSource" asp-route-id="@source.Id" class="btn btn-sm btn-danger" title="Удалить">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        <form asp-action="SyncLdapSource" asp-route-id="@source.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Синхронизировать">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Вернуться на главную</a>
+</div>

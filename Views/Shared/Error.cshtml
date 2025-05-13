@@ -1,0 +1,25 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Ошибка";
+}
+
+<h1 class="text-danger">Ошибка</h1>
+<h2 class="text-danger">Произошла ошибка при обработке вашего запроса.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Идентификатор запроса:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-danger">
+        @Model.Message
+    </div>
+}
+
+<div>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-primary">Вернуться на главную</a>
+</div>

@@ -1,0 +1,56 @@
+@model LdapSource
+@{
+    ViewData["Title"] = "Удаление LDAP-источника";
+}
+
+<h1>Удаление LDAP-источника</h1>
+
+<div class="alert alert-danger mb-4">
+    <h4 class="alert-heading">Внимание!</h4>
+    <p>Вы уверены, что хотите удалить этот LDAP-источник? Это действие нельзя будет отменить.</p>
+    <p>Все контакты, связанные с этим источником, также будут удалены.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Информация об источнике</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID:</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            
+            <dt class="col-sm-3">Название:</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+            
+            <dt class="col-sm-3">Сервер:</dt>
+            <dd class="col-sm-9">@Model.Server</dd>
+            
+            <dt class="col-sm-3">Порт:</dt>
+            <dd class="col-sm-9">@Model.Port</dd>
+            
+            <dt class="col-sm-3">Base DN:</dt>
+            <dd class="col-sm-9">@Model.BaseDn</dd>
+            
+            <dt class="col-sm-3">Статус:</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Активен</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Неактивен</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="DeleteLdapSource" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3">
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a asp-action="LdapSourceDetails" asp-route-id="@Model.Id" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>

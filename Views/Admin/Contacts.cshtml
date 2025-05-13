@@ -1,0 +1,192 @@
+@model IEnumerable<Contact>
+@{
+    ViewData["Title"] = "Контакты";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var pageSize = ViewBag.PageSize ?? 20;
+    var totalCount = ViewBag.TotalCount ?? 0;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchQuery = ViewBag.SearchQuery ?? string.Empty;
+    var department = ViewBag.Department ?? string.Empty;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Контакты</h1>
+    <div>
+        <form asp-action="SearchContacts" method="get" class="d-flex">
+            <input type="text" name="query" class="form-control me-2" placeholder="Поиск..." value="@searchQuery">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Поиск
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(searchQuery))
+{
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Результаты поиска для:</strong> @searchQuery
+                <span class="badge bg-primary ms-2">@totalCount результатов</span>
+            </div>
+            <a asp-action="Contacts" class="btn btn-sm btn-outline-primary">Сбросить поиск</a>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(department))
+{
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Отдел:</strong> @department
+            </div>
+            <a asp-action="Contacts" class="btn btn-sm btn-outline-primary">Показать все контакты</a>
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Контакты не найдены.
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>Email</th>
+                            <th>Телефон</th>
+                            <th>Мобильный</th>
+                            <th>Отдел</th>
+                            <th>Должность</th>
+                            <th>Источник</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var contact in Model)
+                        {
+                            <tr>
+                                <td>@contact.Id</td>
+                                <td>@contact.DisplayName</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(contact.Email))
+                                    {
+                                        <a href="mailto:@contact.Email">@contact.Email</a>
+                                    }
+                                </td>
+                                <td>@contact.PhoneNumber</td>
+                                <td>@contact.Mobile</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(contact.Department))
+                                    {
+                                        <a asp-action="ContactsByDepartment" asp-route-department="@contact.Department">
+                                            @contact.Department
+                                        </a>
+                                    }
+                                </td>
+                                <td>@contact.Title</td>
+                                <td>
+                                    @if (contact.LdapSource != null)
+                                    {
+                                        <a asp-action="LdapSourceDetails" asp-route-id="@contact.LdapSourceId">
+                                            @contact.LdapSource.Name
+                                        </a>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="ContactDetails" asp-route-id="@contact.Id" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                @if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@(string.IsNullOrEmpty(searchQuery) ? "Contacts" : "SearchContacts")" 
+                           asp-route-page="1" 
+                           asp-route-pageSize="@pageSize" 
+                           asp-route-query="@searchQuery"
+                           asp-route-department="@department">
+                            &laquo;
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@(string.IsNullOrEmpty(searchQuery) ? "Contacts" : "SearchContacts")" 
+                           asp-route-page="@(currentPage - 1)" 
+                           asp-route-pageSize="@pageSize" 
+                           asp-route-query="@searchQuery"
+                           asp-route-department="@department">
+                            &lt;
+                        </a>
+                    </li>
+                }
+
+                @{
+                    var startPage = Math.Max(1, currentPage - 2);
+                    var endPage = Math.Min(totalPages, startPage + 4);
+                    startPage = Math.Max(1, endPage - 4);
+                }
+
+                @for (var i = startPage; i <= endPage; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" asp-action="@(string.IsNullOrEmpty(searchQuery) ? "Contacts" : "SearchContacts")" 
+                           asp-route-page="@i" 
+                           asp-route-pageSize="@pageSize" 
+                           asp-route-query="@searchQuery"
+                           asp-route-department="@department">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@(string.IsNullOrEmpty(searchQuery) ? "Contacts" : "SearchContacts")" 
+                           asp-route-page="@(currentPage + 1)" 
+                           asp-route-pageSize="@pageSize" 
+                           asp-route-query="@searchQuery"
+                           asp-route-department="@department">
+                            &gt;
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" asp-action="@(string.IsNullOrEmpty(searchQuery) ? "Contacts" : "SearchContacts")" 
+                           asp-route-page="@totalPages" 
+                           asp-route-pageSize="@pageSize" 
+                           asp-route-query="@searchQuery"
+                           asp-route-department="@department">
+                            &raquo;
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Вернуться на главную</a>
+    <a asp-action="Departments" class="btn btn-info">Просмотр по отделам</a>
+</div>

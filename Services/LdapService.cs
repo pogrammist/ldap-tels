@@ -36,10 +36,23 @@ public class LdapService
 
     public async Task<bool> UpdateSourceAsync(LdapSource source)
     {
-        _context.Entry(source).State = EntityState.Modified;
-        
         try
         {
+            var existingSource = await _context.LdapSources.FindAsync(source.Id);
+            if (existingSource == null)
+            {
+                return false;
+            }
+            
+            // Если пароль пустой, сохраняем старый пароль
+            if (string.IsNullOrEmpty(source.BindPassword))
+            {
+                source.BindPassword = existingSource.BindPassword;
+            }
+            
+            _context.Entry(existingSource).State = EntityState.Detached;
+            _context.Entry(source).State = EntityState.Modified;
+            
             await _context.SaveChangesAsync();
             return true;
         }

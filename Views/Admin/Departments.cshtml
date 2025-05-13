@@ -1,0 +1,42 @@
+@model IEnumerable<string>
+@{
+    ViewData["Title"] = "Отделы";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Отделы</h1>
+    <div>
+        <a asp-action="Contacts" class="btn btn-primary">
+            <i class="bi bi-people"></i> Все контакты
+        </a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Отделы не найдены.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var department in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@department</h5>
+                        <a asp-action="ContactsByDepartment" asp-route-department="@department" class="btn btn-primary mt-2">
+                            <i class="bi bi-people"></i> Просмотр контактов
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Вернуться на главную</a>
+</div>

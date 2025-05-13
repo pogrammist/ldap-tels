@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Добавляем сервисы в контейнер
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 // Настройка базы данных
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Регистрация сервисов
 builder.Services.AddScoped<LdapService>();
@@ -40,9 +40,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Admin}/{action=Index}/{id?}");
 
 // Создание базы данных при запуске приложения
 using (var scope = app.Services.CreateScope())
