@@ -96,6 +96,21 @@ public class LdapService
             
             var contacts = await GetContactsFromLdapAsync(source);
             
+            // Получаем список DN всех контактов из LDAP
+            var ldapDns = contacts.Select(c => c.DistinguishedName).ToList();
+            
+            // Находим контакты, которых нет в LDAP
+            var contactsToDelete = await _context.Contacts
+                .Where(c => c.LdapSourceId == source.Id && !ldapDns.Contains(c.DistinguishedName))
+                .ToListAsync();
+            
+            // Удаляем контакты, которых нет в LDAP
+            if (contactsToDelete.Any())
+            {
+                _context.Contacts.RemoveRange(contactsToDelete);
+                _logger.LogInformation("Удалено {Count} контактов, которых нет в LDAP", contactsToDelete.Count);
+            }
+            
             // Обновляем время последней синхронизации
             source.LastSyncTime = DateTime.UtcNow;
             await _context.SaveChangesAsync();
