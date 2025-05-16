@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4">Добро пожаловать</h1>
+            <p class="lead">Телефонный справочник организации</p>
+            
+            <div class="mt-4">
+                <a asp-controller="PhoneBook" asp-action="Index" class="btn btn-primary btn-lg me-3">
+                    Телефонный справочник
+                </a>
+                
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-lg">
+                        Панель администратора
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-secondary btn-lg">
+                        Вход для администраторов
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div> 

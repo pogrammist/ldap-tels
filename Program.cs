@@ -1,6 +1,7 @@
 using ad_tels.Data;
 using ad_tels.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,22 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+// Добавляем аутентификацию
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
+
+// Добавляем авторизацию
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole", policy =>
+        policy.RequireRole("Administrator"));
+});
+
 // Настройка базы данных
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -16,6 +33,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Регистрация сервисов
 builder.Services.AddScoped<LdapService>();
 builder.Services.AddScoped<ContactService>();
+builder.Services.AddScoped<ActiveDirectoryService>();
 builder.Services.AddHostedService<LdapSyncBackgroundService>();
 
 // Настройка CORS
@@ -41,12 +59,17 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=PhoneBook}/{action=Index}/{id?}");
 
 // Создание базы данных при запуске приложения
 using (var scope = app.Services.CreateScope())

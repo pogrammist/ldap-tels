@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Панель администратора";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mt-4">
+    <h1>Панель администратора</h1>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Управление LDAP</h5>
+                    <p class="card-text">Настройка источников LDAP и синхронизация данных</p>
+                    <a href="@Url.Action("Index", "LdapSource", new { area = "Admin" })" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Управление контактами</h5>
+                    <p class="card-text">Редактирование и управление контактами</p>
+                    <a href="@Url.Action("Index", "Contact", new { area = "Admin" })" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
