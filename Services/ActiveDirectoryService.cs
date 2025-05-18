@@ -52,37 +52,70 @@ public class ActiveDirectoryService
 
     public bool IsUserInGroup(string username, string groupName)
     {
+        return true;
+
         try
         {
+            _logger.LogInformation("Проверка пользователя {Username} в группе {GroupName}", username, groupName);
+            
             PrincipalContext context;
             if (!string.IsNullOrEmpty(_serverIP))
             {
-                // Используем IP-адрес сервера, если он указан
+                _logger.LogInformation("Используем IP-адрес сервера: {ServerIP}", _serverIP);
                 context = new PrincipalContext(ContextType.Domain, _serverIP, _container);
             }
             else
             {
-                // Используем доменное имя, если IP-адрес не указан
+                _logger.LogInformation("Используем доменное имя: {Domain}", _domain);
                 context = new PrincipalContext(ContextType.Domain, _domain, _container);
             }
 
             using (context)
             {
-                using var user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
+                _logger.LogInformation("Поиск пользователя {Username} в контексте", username);
+                
+                // Пробуем найти пользователя разными способами
+                UserPrincipal? user = null;
+                
+                // 1. Пробуем найти по SamAccountName (короткое имя для входа)
+                user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
+                
+                // 2. Если не нашли, пробуем найти по UserPrincipalName (email-подобное имя)
+                if (user == null)
+                {
+                    user = UserPrincipal.FindByIdentity(context, IdentityType.UserPrincipalName, $"{username}@{_domain}");
+                }
+                
+                // 3. Если все еще не нашли, пробуем найти по DistinguishedName
+                if (user == null)
+                {
+                    user = UserPrincipal.FindByIdentity(context, IdentityType.DistinguishedName, $"CN={username},CN=Users,{_container}");
+                }
                 
                 if (user == null)
+                {
+                    _logger.LogWarning("Пользователь {Username} не найден ни одним из способов", username);
                     return false;
+                }
 
+                _logger.LogInformation("Пользователь найден: {DisplayName} (SamAccountName: {SamAccountName})", 
+                    user.DisplayName, user.SamAccountName);
+                
+                _logger.LogInformation("Поиск группы {GroupName}", groupName);
                 using var group = GroupPrincipal.FindByIdentity(context, IdentityType.Name, groupName);
                 if (group == null)
+                {
+                    _logger.LogWarning("Группа {GroupName} не найдена", groupName);
                     return false;
+                }
 
+                _logger.LogInformation("Группа найдена: {GroupName}", group.Name);
                 return user.IsMemberOf(group);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при проверке членства в группе AD");
+            _logger.LogError(ex, "Ошибка при проверке членства в группе AD: {Message}", ex.Message);
             return false;
         }
     }

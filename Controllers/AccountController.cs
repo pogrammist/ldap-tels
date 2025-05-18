@@ -39,10 +39,7 @@ public class AccountController : Controller
             // Проверяем учетные данные через AD
             if (_adService.ValidateCredentials(model.Username, model.Password))
             {
-                // Проверяем, входит ли пользователь в группу администраторов домена
-                // string? adminGroup = _configuration["ActiveDirectory:AdminGroup"];
-                // if (adminGroup != null && _adService.IsUserInGroup(model.Username, adminGroup))
-                // Проверяем, входит ли пользователь в группу пользователь домена
+                // Проверяем, входит ли пользователь в группу администраторов
                 _logger.LogInformation("Пользователь {Username}", model.Username);
                 _logger.LogInformation("Группа {Group}", _configuration["ActiveDirectory:AdminGroup"]);
                 if (_adService.IsUserInGroup(model.Username, _configuration["ActiveDirectory:AdminGroup"]))
