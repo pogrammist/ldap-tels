@@ -10,6 +10,7 @@ public class ActiveDirectoryService
     private readonly IConfiguration _configuration;
     private readonly ILogger<ActiveDirectoryService> _logger;
     private readonly string _domain;
+    private readonly string? _serverIP;
     private readonly string _container;
 
     public ActiveDirectoryService(IConfiguration configuration, ILogger<ActiveDirectoryService> logger)
@@ -17,6 +18,7 @@ public class ActiveDirectoryService
         _configuration = configuration;
         _logger = logger;
         _domain = _configuration["ActiveDirectory:Domain"] ?? throw new ArgumentNullException("ActiveDirectory:Domain");
+        _serverIP = _configuration["ActiveDirectory:ServerIP"];
         _container = _configuration["ActiveDirectory:Container"] ?? throw new ArgumentNullException("ActiveDirectory:Container");
     }
 
@@ -24,8 +26,22 @@ public class ActiveDirectoryService
     {
         try
         {
-            using var context = new PrincipalContext(ContextType.Domain, _domain, _container);
-            return context.ValidateCredentials(username, password);
+            PrincipalContext context;
+            if (!string.IsNullOrEmpty(_serverIP))
+            {
+                // Используем IP-адрес сервера, если он указан
+                context = new PrincipalContext(ContextType.Domain, _serverIP, _container);
+            }
+            else
+            {
+                // Используем доменное имя, если IP-адрес не указан
+                context = new PrincipalContext(ContextType.Domain, _domain, _container);
+            }
+
+            using (context)
+            {
+                return context.ValidateCredentials(username, password);
+            }
         }
         catch (Exception ex)
         {
@@ -38,17 +54,31 @@ public class ActiveDirectoryService
     {
         try
         {
-            using var context = new PrincipalContext(ContextType.Domain, _domain, _container);
-            using var user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
-            
-            if (user == null)
-                return false;
+            PrincipalContext context;
+            if (!string.IsNullOrEmpty(_serverIP))
+            {
+                // Используем IP-адрес сервера, если он указан
+                context = new PrincipalContext(ContextType.Domain, _serverIP, _container);
+            }
+            else
+            {
+                // Используем доменное имя, если IP-адрес не указан
+                context = new PrincipalContext(ContextType.Domain, _domain, _container);
+            }
 
-            using var group = GroupPrincipal.FindByIdentity(context, IdentityType.Name, groupName);
-            if (group == null)
-                return false;
+            using (context)
+            {
+                using var user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
+                
+                if (user == null)
+                    return false;
 
-            return user.IsMemberOf(group);
+                using var group = GroupPrincipal.FindByIdentity(context, IdentityType.Name, groupName);
+                if (group == null)
+                    return false;
+
+                return user.IsMemberOf(group);
+            }
         }
         catch (Exception ex)
         {
@@ -61,9 +91,23 @@ public class ActiveDirectoryService
     {
         try
         {
-            using var context = new PrincipalContext(ContextType.Domain, _domain, _container);
-            using var user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
-            return user?.DisplayName ?? username;
+            PrincipalContext context;
+            if (!string.IsNullOrEmpty(_serverIP))
+            {
+                // Используем IP-адрес сервера, если он указан
+                context = new PrincipalContext(ContextType.Domain, _serverIP, _container);
+            }
+            else
+            {
+                // Используем доменное имя, если IP-адрес не указан
+                context = new PrincipalContext(ContextType.Domain, _domain, _container);
+            }
+
+            using (context)
+            {
+                using var user = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, username);
+                return user?.DisplayName ?? username;
+            }
         }
         catch (Exception ex)
         {
@@ -71,4 +115,4 @@ public class ActiveDirectoryService
             return username;
         }
     }
-} 
+}

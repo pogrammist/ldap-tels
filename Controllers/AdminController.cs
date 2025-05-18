@@ -1,9 +1,11 @@
 using ad_tels.Models;
 using ad_tels.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ad_tels.Controllers;
 
+[Authorize(Roles = "Administrator")]
 public class AdminController : Controller
 {
     private readonly LdapService _ldapService;
