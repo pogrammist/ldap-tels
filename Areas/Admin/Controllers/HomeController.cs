@@ -3,19 +3,20 @@ using ad_tels.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ad_tels.Controllers;
+namespace ad_tels.Areas.Admin.Controllers;
 
+[Area("Admin")]
 [Authorize(Roles = "Administrator")]
-public class AdminController : Controller
+public class HomeController : Controller
 {
     private readonly LdapService _ldapService;
     private readonly ContactService _contactService;
-    private readonly ILogger<AdminController> _logger;
+    private readonly ILogger<HomeController> _logger;
 
-    public AdminController(
+    public HomeController(
         LdapService ldapService, 
         ContactService contactService, 
-        ILogger<AdminController> logger)
+        ILogger<HomeController> logger)
     {
         _ldapService = ldapService;
         _contactService = contactService;
@@ -297,9 +298,12 @@ public class AdminController : Controller
         try
         {
             var contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
+            var totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
             
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
             ViewBag.Department = department;
             
             return View("Contacts", contacts);

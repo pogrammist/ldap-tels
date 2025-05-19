@@ -1,7 +1,7 @@
 @model ad_tels.Models.ErrorViewModel
+
 @{
     ViewData["Title"] = "Ошибка";
-    Layout = "_PublicLayout";
 }
 
 <div class="container">
@@ -14,13 +14,6 @@
                 <div class="card-body">
                     <h5 class="text-danger">Произошла ошибка при обработке вашего запроса.</h5>
                     
-                    @if (Model.ShowRequestId)
-                    {
-                        <p>
-                            <strong>Идентификатор запроса:</strong> <code>@Model.RequestId</code>
-                        </p>
-                    }
-                    
                     @if (!string.IsNullOrEmpty(Model.Message))
                     {
                         <div class="alert alert-danger mt-3">
@@ -29,7 +22,7 @@
                     }
                     
                     <div class="mt-4">
-                        <a asp-controller="PhoneBook" asp-action="Index" class="btn btn-outline-secondary">
+                        <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Вернуться на главную
                         </a>
                     </div>

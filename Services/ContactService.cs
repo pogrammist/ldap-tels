@@ -109,4 +109,11 @@ public class ContactService
             .OrderBy(d => d)
             .ToListAsync();
     }
+
+    public async Task<int> GetContactsByDepartmentCountAsync(string department)
+    {
+        return await _context.Contacts
+            .Where(c => c.Department.ToLower() == department.ToLower())
+            .CountAsync();
+    }
 }

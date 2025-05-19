@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Доступ запрещен";
+    Layout = "_PublicLayout";
+}
+
+<div class="container text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4>@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">У вас нет прав для доступа к запрошенной странице.</p>
+                    <p>Для доступа к админ-панели необходимо войти в систему с учетной записью, имеющей права администратора.</p>
+                    <div class="mt-4">
+                        <a asp-controller="PhoneBook" asp-action="Index" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left"></i> Вернуться к справочнику
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти в систему
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
