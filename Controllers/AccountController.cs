@@ -9,37 +9,38 @@ namespace ad_tels.Controllers;
 
 public class AccountController : Controller
 {
+    private readonly ILdapAuthService _authService;
     private readonly ILogger<AccountController> _logger;
-    private readonly ActiveDirectoryService _adService;
 
-    public AccountController(ILogger<AccountController> logger, ActiveDirectoryService adService)
+    public AccountController(ILdapAuthService authService, ILogger<AccountController> logger)
     {
+        _authService = authService;
         _logger = logger;
-        _adService = adService;
     }
 
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(string returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
         return View();
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(LoginModel model, string? returnUrl = null)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginModel model, string returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
 
         if (ModelState.IsValid)
         {
-            // Проверяем учетные данные через AD
-            if (_adService.ValidateCredentials(model.Username, model.Password))
+            // Проверяем учетные данные через LDAP
+            if (await _authService.ValidateCredentialsAsync(model.Username, model.Password))
             {
                 // Проверяем, входит ли пользователь в группу администраторов
-                if (_adService.IsUserInAdminGroup(model.Username))
+                if (_authService.IsUserInAdminGroup(model.Username))
                 {
-                    var displayName = _adService.GetUserDisplayName(model.Username);
-                    
+                    var displayName = _authService.GetUserDisplayName(model.Username);
+
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, model.Username),
@@ -72,26 +73,26 @@ public class AccountController : Controller
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "У вас нет прав для доступа к админ-панели");
+                    ModelState.AddModelError(string.Empty, "У вас нет прав администратора");
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "Неверный логин или пароль");
+                ModelState.AddModelError(string.Empty, "Неверное имя пользователя или пароль");
             }
         }
 
         return View(model);
     }
 
-    [HttpGet]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index", "PhoneBook");
+        return RedirectToAction("Index", "Home");
     }
 
-    [HttpGet]
     public IActionResult AccessDenied()
     {
         return View();

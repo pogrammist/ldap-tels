@@ -2,6 +2,7 @@ using ad_tels.Data;
 using ad_tels.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ad_tels.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,9 +32,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Регистрация сервисов
+builder.Services.Configure<LdapSettings>(builder.Configuration.GetSection("LdapSettings"));
 builder.Services.AddScoped<LdapService>();
 builder.Services.AddScoped<ContactService>();
-builder.Services.AddScoped<ActiveDirectoryService>();
+builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 builder.Services.AddHostedService<LdapSyncBackgroundService>();
 
 // Настройка CORS
