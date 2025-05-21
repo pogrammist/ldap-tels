@@ -37,9 +37,9 @@ public class AccountController : Controller
             if (await _authService.ValidateCredentialsAsync(model.Username, model.Password))
             {
                 // Проверяем, входит ли пользователь в группу администраторов
-                if (_authService.IsUserInAdminGroup(model.Username))
+                if (await _authService.IsUserInAdminGroup(model.Username))
                 {
-                    var displayName = _authService.GetUserDisplayName(model.Username);
+                    var displayName = await _authService.GetUserDisplayName(model.Username);
 
                     var claims = new List<Claim>
                     {
@@ -90,7 +90,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Login");
     }
 
     public IActionResult AccessDenied()

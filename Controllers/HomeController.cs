@@ -2,11 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ad_tels.Controllers;
 
-[ApiController]
-[Route("api")]
-public class HomeController : ControllerBase
+public class HomeController : Controller
 {
     [HttpGet]
+    public IActionResult Index()
+    {
+        return View();
+    }
+
+    [HttpGet("api")]
+    [ApiExplorerSettings(IgnoreApi = false)]
     public ActionResult<object> GetApiInfo()
     {
         return new
@@ -21,8 +26,9 @@ public class HomeController : ControllerBase
             }
         };
     }
-    
-    [HttpGet("health")]
+
+    [HttpGet("api/health")]
+    [ApiExplorerSettings(IgnoreApi = false)]
     public ActionResult<object> GetHealthCheck()
     {
         return new

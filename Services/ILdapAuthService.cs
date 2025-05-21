@@ -5,6 +5,6 @@ namespace ad_tels.Services;
 public interface ILdapAuthService
 {
 	Task<bool> ValidateCredentialsAsync(string username, string password);
-	bool IsUserInAdminGroup(string username);
-	string GetUserDisplayName(string username);
+	Task<bool> IsUserInAdminGroup(string username);
+	Task<string> GetUserDisplayName(string username);
 }

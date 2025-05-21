@@ -1,8 +1,7 @@
-using System.DirectoryServices.Protocols;
-using System.Net;
-using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using Novell.Directory.Ldap;
 using ad_tels.Configuration;
 
 namespace ad_tels.Services;
@@ -25,23 +24,23 @@ public class LdapAuthService : ILdapAuthService
         _logger.LogInformation("Начало аутентификации пользователя {Username}", username);
         try
         {
-            using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
-            connection.AuthType = AuthType.Basic;
-            var userDn = $"{username}@{_settings.Domain}";
-            connection.SessionOptions.ProtocolVersion = 3;
-            connection.SessionOptions.ReferralChasing = ReferralChasingOptions.None;
-            connection.SessionOptions.SecureSocketLayer = true;
+            using var connection = new LdapConnection();
+            connection.SecureSocketLayer = _settings.UseSsl;
+            await connection.ConnectAsync(_settings.Server, _settings.Port);
 
-            _logger.LogDebug("Подключение к LDAP серверу {Server}:{Port}", _settings.Server, _settings.Port);
-            await Task.Run(() => connection.Bind(new NetworkCredential(userDn, password)));
+            var userDn = $"{username}@{_settings.Domain}";
+            _logger.LogDebug("Подключение к LDAP серверу {Server}:{Port} с DN: {UserDn}",
+                _settings.Server, _settings.Port, userDn);
+
+            await connection.BindAsync(userDn, password);
 
             _logger.LogInformation("Пользователь {Username} успешно аутентифицирован", username);
-            return true;
+            return connection.Bound;
         }
         catch (LdapException ex)
         {
             _logger.LogError(ex, "Ошибка аутентификации для пользователя {Username}. Код ошибки: {ErrorCode}, Сообщение: {Message}",
-                username, ex.ErrorCode, ex.Message);
+                username, ex.ResultCode, ex.Message);
             return false;
         }
         catch (Exception ex)
@@ -51,39 +50,38 @@ public class LdapAuthService : ILdapAuthService
         }
     }
 
-    public bool IsUserInAdminGroup(string username)
+    public async Task<bool> IsUserInAdminGroup(string username)
     {
         _logger.LogInformation("Проверка прав администратора для пользователя {Username}", username);
         try
         {
-            using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
-            connection.AuthType = AuthType.Basic;
+            using var connection = new LdapConnection();
+            connection.SecureSocketLayer = _settings.UseSsl;
+            await connection.ConnectAsync(_settings.Server, _settings.Port);
 
             _logger.LogDebug("Подключение к LDAP серверу с учетными данными сервиса");
-            connection.Bind(new NetworkCredential(_settings.BindUsername, _settings.BindPassword));
+            await connection.BindAsync(_settings.BindUsername, _settings.BindPassword);
 
             var searchFilter = $"(&(objectClass=user)(sAMAccountName={username}))";
             _logger.LogDebug("Поиск пользователя с фильтром: {Filter}", searchFilter);
 
-            var searchRequest = new SearchRequest(
+            var searchResults = await connection.SearchAsync(
                 _settings.SearchBase,
+                LdapConnection.ScopeSub,
                 searchFilter,
-                SearchScope.Subtree,
-                "memberOf"
+                new[] { "memberOf" },
+                false
             );
 
-            var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-            if (response.Entries.Count > 0)
+            await foreach (var entry in searchResults)
             {
-                var entry = response.Entries[0];
-                var memberOf = entry.Attributes["memberOf"];
+                var memberOf = entry.Get("memberOf");
                 if (memberOf != null)
                 {
-                    var groups = memberOf.GetValues(typeof(string)).Cast<string>().ToList();
+                    var groups = memberOf.StringValueArray;
                     _logger.LogDebug("Найдены группы пользователя: {Groups}", string.Join(", ", groups));
 
-                    var isAdmin = groups.Any(value => value.Contains(_settings.AdminGroupDn));
+                    var isAdmin = groups.Any(g => g.Contains(_settings.AdminGroupDn));
                     _logger.LogInformation("Пользователь {Username} {IsAdmin} администратором",
                         username, isAdmin ? "является" : "не является");
                     return isAdmin;
@@ -96,7 +94,7 @@ public class LdapAuthService : ILdapAuthService
         catch (LdapException ex)
         {
             _logger.LogError(ex, "Ошибка при проверке группы администраторов для пользователя {Username}. Код ошибки: {ErrorCode}, Сообщение: {Message}",
-                username, ex.ErrorCode, ex.Message);
+                username, ex.ResultCode, ex.Message);
             return false;
         }
         catch (Exception ex)
@@ -106,36 +104,35 @@ public class LdapAuthService : ILdapAuthService
         }
     }
 
-    public string GetUserDisplayName(string username)
+    public async Task<string> GetUserDisplayName(string username)
     {
         _logger.LogInformation("Получение отображаемого имени для пользователя {Username}", username);
         try
         {
-            using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
-            connection.AuthType = AuthType.Basic;
+            using var connection = new LdapConnection();
+            connection.SecureSocketLayer = _settings.UseSsl;
+            await connection.ConnectAsync(_settings.Server, _settings.Port);
 
             _logger.LogDebug("Подключение к LDAP серверу с учетными данными сервиса");
-            connection.Bind(new NetworkCredential(_settings.BindUsername, _settings.BindPassword));
+            await connection.BindAsync(_settings.BindUsername, _settings.BindPassword);
 
             var searchFilter = $"(&(objectClass=user)(sAMAccountName={username}))";
             _logger.LogDebug("Поиск пользователя с фильтром: {Filter}", searchFilter);
 
-            var searchRequest = new SearchRequest(
+            var searchResults = await connection.SearchAsync(
                 _settings.SearchBase,
+                LdapConnection.ScopeSub,
                 searchFilter,
-                SearchScope.Subtree,
-                "displayName"
+                new[] { "displayName" },
+                false
             );
 
-            var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-            if (response.Entries.Count > 0)
+            await foreach (var entry in searchResults)
             {
-                var entry = response.Entries[0];
-                var displayName = entry.Attributes["displayName"];
-                if (displayName != null && displayName.Count > 0)
+                var displayName = entry.Get("displayName");
+                if (displayName != null)
                 {
-                    var name = displayName[0].ToString() ?? username;
+                    var name = displayName.StringValue ?? username;
                     _logger.LogInformation("Найдено отображаемое имя для пользователя {Username}: {DisplayName}", username, name);
                     return name;
                 }
@@ -147,7 +144,7 @@ public class LdapAuthService : ILdapAuthService
         catch (LdapException ex)
         {
             _logger.LogError(ex, "Ошибка при получении отображаемого имени для пользователя {Username}. Код ошибки: {ErrorCode}, Сообщение: {Message}",
-                username, ex.ErrorCode, ex.Message);
+                username, ex.ResultCode, ex.Message);
             return username;
         }
         catch (Exception ex)
