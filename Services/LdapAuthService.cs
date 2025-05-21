@@ -1,29 +1,11 @@
 using System.DirectoryServices.Protocols;
 using System.Net;
-using ad_tels.Models;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
 using System.Linq;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
+using ad_tels.Configuration;
 
 namespace ad_tels.Services;
-
-public interface ILdapAuthService
-{
-    Task<bool> ValidateCredentialsAsync(string username, string password);
-    Task<LdapUser> GetUserInfoAsync(string username);
-    bool IsUserInAdminGroup(string username);
-    string GetUserDisplayName(string username);
-}
-
-public class LdapUser
-{
-    public required string Username { get; set; }
-    public string? DisplayName { get; set; }
-    public string? Email { get; set; }
-    public List<string> Groups { get; set; } = new List<string>();
-}
 
 public class LdapAuthService : ILdapAuthService
 {
@@ -40,138 +22,54 @@ public class LdapAuthService : ILdapAuthService
     {
         try
         {
-            _logger.LogInformation("Начало аутентификации пользователя {Username}", username);
-
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                _logger.LogWarning("Пустые учетные данные для пользователя {Username}", username);
-                return false;
-            }
-
-            // Формируем DN пользователя в формате CN=username,OU=Domain Users,DC=domain,DC=com
-            var userDn = $"CN={username},OU=Domain Users,DC={_settings.Domain.Replace(".", ",DC=")}";
-            _logger.LogDebug("Попытка аутентификации с DN: {UserDn}", userDn);
-
-            return await Task.Run(() =>
-            {
-                using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port))
-                {
-                    AuthType = AuthType.Basic,
-                    SessionOptions =
-                    {
-                    ProtocolVersion = 3,
-                    ReferralChasing = ReferralChasingOptions.None
-                    },
-                    Credential = new NetworkCredential(userDn, password)
-                };
-
-                try
-                {
-                    connection.Bind();
-                    _logger.LogInformation("Успешная аутентификация пользователя {Username}", username);
-                    return true;
-                }
-                catch (LdapException ex)
-                {
-                    _logger.LogWarning(ex, "Ошибка аутентификации пользователя {Username}: {Message}", username, ex.Message);
-                    return false;
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Непредвиденная ошибка при аутентификации пользователя {Username}", username);
-            return false;
-        }
-    }
-
-    public async Task<LdapUser> GetUserInfoAsync(string username)
-    {
-        return await Task.Run(() =>
-        {
             using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
             connection.AuthType = AuthType.Basic;
-            connection.SessionOptions.ProtocolVersion = 3;
+            var userDn = $"{_settings.Domain}\\{username}";
 
-            // Используем служебную учетную запись для поиска
-            connection.Bind(new NetworkCredential(_settings.BindDn, _settings.BindPassword));
-
-            var searchRequest = new SearchRequest(
-                _settings.SearchBase,
-                string.Format(_settings.UserSearchFilter, username),
-                SearchScope.Subtree,
-                new[] { "cn", "mail", "memberOf" }
-            );
-
-            var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-            if (response.Entries.Count == 0)
-            {
-                throw new Exception($"Пользователь {username} не найден");
-            }
-
-            var entry = response.Entries[0];
-            var user = new LdapUser
-            {
-                Username = username,
-                DisplayName = entry.Attributes["cn"]?[0].ToString(),
-                Email = entry.Attributes["mail"]?[0].ToString(),
-                Groups = entry.Attributes["memberOf"]?.Cast<string>().ToList() ?? new List<string>()
-            };
-
-            return user;
-        });
+            await Task.Run(() => connection.Bind(new NetworkCredential(userDn, password)));
+            return true;
+        }
+        catch (LdapException ex)
+        {
+            _logger.LogError(ex, "Ошибка аутентификации для пользователя {Username}", username);
+            return false;
+        }
     }
 
     public bool IsUserInAdminGroup(string username)
     {
         try
         {
-            using var connection = new LdapConnection(_settings.Server)
-            {
-                AuthType = AuthType.Basic,
-                Credential = new NetworkCredential(_settings.BindDn, _settings.BindPassword)
-            };
+            using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
+            connection.AuthType = AuthType.Basic;
+            connection.Bind(new NetworkCredential(_settings.BindUsername, _settings.BindPassword));
 
             var searchRequest = new SearchRequest(
                 _settings.SearchBase,
-                $"(sAMAccountName={username})",
+                $"(&(objectClass=user)(sAMAccountName={username}))",
                 SearchScope.Subtree,
-                new[] { "memberOf" }
+                "memberOf"
             );
 
             var response = (SearchResponse)connection.SendRequest(searchRequest);
-            if (response.Entries.Count == 0)
-            {
-                _logger.LogWarning("Пользователь {Username} не найден", username);
-                return false;
-            }
 
-            var userEntry = response.Entries[0];
-            var memberOf = userEntry.Attributes["memberOf"];
-            if (memberOf == null)
+            if (response.Entries.Count > 0)
             {
-                _logger.LogWarning("У пользователя {Username} нет групп", username);
-                return false;
-            }
-
-            var isAdmin = false;
-            for (int i = 0; i < memberOf.Count; i++)
-            {
-                if (memberOf[i].ToString().Contains(_settings.AdminGroup))
+                var entry = response.Entries[0];
+                var memberOf = entry.Attributes["memberOf"];
+                if (memberOf != null)
                 {
-                    isAdmin = true;
-                    break;
+                    return memberOf.GetValues(typeof(string))
+                        .Cast<string>()
+                        .Any(value => value.Contains(_settings.AdminGroupDn));
                 }
             }
 
-            _logger.LogInformation("Пользователь {Username} {IsAdmin} администратором",
-                username, isAdmin ? "является" : "не является");
-            return isAdmin;
+            return false;
         }
-        catch (Exception ex)
+        catch (LdapException ex)
         {
-            _logger.LogError(ex, "Ошибка при проверке прав администратора для пользователя {Username}", username);
+            _logger.LogError(ex, "Ошибка при проверке группы администраторов для пользователя {Username}", username);
             return false;
         }
     }
@@ -180,39 +78,35 @@ public class LdapAuthService : ILdapAuthService
     {
         try
         {
-            using var connection = new LdapConnection(_settings.Server)
-            {
-                AuthType = AuthType.Basic,
-                Credential = new NetworkCredential(_settings.BindDn, _settings.BindPassword)
-            };
+            using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
+            connection.AuthType = AuthType.Basic;
+            connection.Bind(new NetworkCredential(_settings.BindUsername, _settings.BindPassword));
 
             var searchRequest = new SearchRequest(
                 _settings.SearchBase,
-                $"(sAMAccountName={username})",
+                $"(&(objectClass=user)(sAMAccountName={username}))",
                 SearchScope.Subtree,
-                new[] { "displayName" }
+                "displayName"
             );
 
             var response = (SearchResponse)connection.SendRequest(searchRequest);
-            if (response.Entries.Count == 0)
+
+            if (response.Entries.Count > 0)
             {
-                _logger.LogWarning("Пользователь {Username} не найден", username);
-                return username;
+                var entry = response.Entries[0];
+                var displayName = entry.Attributes["displayName"];
+                if (displayName != null && displayName.Count > 0)
+                {
+                    return displayName[0].ToString() ?? username;
+                }
             }
 
-            var displayNameAttr = response.Entries[0].Attributes["displayName"];
-            string? displayName = null;
-            if (displayNameAttr != null && displayNameAttr.Count > 0)
-            {
-                displayName = displayNameAttr[0].ToString();
-            }
-            return string.IsNullOrEmpty(displayName) ? username : displayName;
+            return username;
         }
-        catch (Exception ex)
+        catch (LdapException ex)
         {
             _logger.LogError(ex, "Ошибка при получении отображаемого имени для пользователя {Username}", username);
             return username;
         }
     }
 }
-

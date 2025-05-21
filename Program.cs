@@ -1,5 +1,6 @@
 using ad_tels.Data;
 using ad_tels.Services;
+using ad_tels.Configuration;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ad_tels.Models;
@@ -33,9 +34,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Регистрация сервисов
 builder.Services.Configure<LdapSettings>(builder.Configuration.GetSection("LdapSettings"));
+builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 builder.Services.AddScoped<LdapService>();
 builder.Services.AddScoped<ContactService>();
-builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 builder.Services.AddHostedService<LdapSyncBackgroundService>();
 
 // Настройка CORS
