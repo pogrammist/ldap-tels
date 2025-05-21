@@ -27,7 +27,10 @@ public class LdapAuthService : ILdapAuthService
         {
             using var connection = new LdapConnection(new LdapDirectoryIdentifier(_settings.Server, _settings.Port));
             connection.AuthType = AuthType.Basic;
-            var userDn = $"{_settings.Domain}\\{username}";
+            var userDn = $"{username}@{_settings.Domain}";
+            connection.SessionOptions.ProtocolVersion = 3;
+            connection.SessionOptions.ReferralChasing = ReferralChasingOptions.None;
+            connection.SessionOptions.SecureSocketLayer = true;
 
             _logger.LogDebug("Подключение к LDAP серверу {Server}:{Port}", _settings.Server, _settings.Port);
             await Task.Run(() => connection.Bind(new NetworkCredential(userDn, password)));
