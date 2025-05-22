@@ -43,16 +43,16 @@ public class LdapService
             {
                 return false;
             }
-            
+
             // Если пароль пустой, сохраняем старый пароль
             if (string.IsNullOrEmpty(source.BindPassword))
             {
                 source.BindPassword = existingSource.BindPassword;
             }
-            
+
             _context.Entry(existingSource).State = EntityState.Detached;
             _context.Entry(source).State = EntityState.Modified;
-            
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -93,14 +93,14 @@ public class LdapService
         try
         {
             _logger.LogInformation("Начало синхронизации с LDAP-сервером: {Name}", source.Name);
-            
+
             var contacts = await GetContactsFromLdapAsync(source);
-            
+
             // Обновляем время последней синхронизации
             source.LastSyncTime = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            
-            _logger.LogInformation("Синхронизация с LDAP-сервером {Name} завершена. Получено {Count} контактов", 
+
+            _logger.LogInformation("Синхронизация с LDAP-сервером {Name} завершена. Получено {Count} контактов",
                 source.Name, contacts.Count);
         }
         catch (Exception ex)
@@ -113,20 +113,20 @@ public class LdapService
     private async Task<List<Contact>> GetContactsFromLdapAsync(LdapSource source)
     {
         var contacts = new List<Contact>();
-        
+
         // Создаем идентификатор сервера LDAP
         var ldapIdentifier = new LdapDirectoryIdentifier(source.Server, source.Port, false, false);
-        
+
         // Создаем учетные данные для подключения
-        NetworkCredential credentials = null;
+        NetworkCredential? credentials = null;
         if (!string.IsNullOrEmpty(source.BindDn) && !string.IsNullOrEmpty(source.BindPassword))
         {
             credentials = new NetworkCredential(source.BindDn, source.BindPassword);
         }
-        
+
         // Создаем подключение к LDAP серверу
         using var connection = new LdapConnection(ldapIdentifier, credentials);
-        
+
         try
         {
             // Настройка SSL, если требуется
@@ -135,25 +135,25 @@ public class LdapService
                 connection.SessionOptions.SecureSocketLayer = true;
                 connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true; // Отключаем проверку сертификата для тестирования
             }
-            
+
             // Устанавливаем таймаут
             connection.Timeout = TimeSpan.FromSeconds(30);
-            
+
             // Подключаемся к серверу
             connection.Bind();
-            
+
             // Создаем запрос поиска
             var searchRequest = new SearchRequest(
                 source.BaseDn,
                 source.SearchFilter,
                 System.DirectoryServices.Protocols.SearchScope.Subtree,
-                "cn", "sn", "givenName", "mail", "telephoneNumber", "mobile", 
+                "cn", "sn", "givenName", "mail", "telephoneNumber", "mobile",
                 "department", "title", "company", "displayName"
             );
-            
+
             // Выполняем поиск
             var searchResponse = (SearchResponse)connection.SendRequest(searchRequest);
-            
+
             // Обрабатываем результаты
             foreach (SearchResultEntry entry in searchResponse.Entries)
             {
@@ -163,64 +163,64 @@ public class LdapService
                     DistinguishedName = entry.DistinguishedName,
                     LastUpdated = DateTime.UtcNow
                 };
-                
+
                 // Заполнение полей контакта из атрибутов LDAP
                 if (entry.Attributes.Contains("displayName"))
                 {
                     contact.DisplayName = entry.Attributes["displayName"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("givenName"))
                 {
                     contact.FirstName = entry.Attributes["givenName"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("sn"))
                 {
                     contact.LastName = entry.Attributes["sn"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("mail"))
                 {
                     contact.Email = entry.Attributes["mail"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("telephoneNumber"))
                 {
                     contact.PhoneNumber = entry.Attributes["telephoneNumber"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("mobile"))
                 {
                     contact.Mobile = entry.Attributes["mobile"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("department"))
                 {
                     contact.Department = entry.Attributes["department"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("title"))
                 {
                     contact.Title = entry.Attributes["title"][0] as string ?? string.Empty;
                 }
-                
+
                 if (entry.Attributes.Contains("company"))
                 {
                     contact.Company = entry.Attributes["company"][0] as string ?? string.Empty;
                 }
-                
+
                 // Если DisplayName пустой, создаем его из имени и фамилии
-                if (string.IsNullOrEmpty(contact.DisplayName) && 
+                if (string.IsNullOrEmpty(contact.DisplayName) &&
                     (!string.IsNullOrEmpty(contact.FirstName) || !string.IsNullOrEmpty(contact.LastName)))
                 {
                     contact.DisplayName = $"{contact.FirstName} {contact.LastName}".Trim();
                 }
-                
+
                 // Проверяем, существует ли уже контакт с таким DN
                 var existingContact = await _context.Contacts
                     .FirstOrDefaultAsync(c => c.DistinguishedName == contact.DistinguishedName);
-                
+
                 if (existingContact != null)
                 {
                     // Обновляем существующий контакт
@@ -234,7 +234,7 @@ public class LdapService
                     existingContact.Title = contact.Title;
                     existingContact.Company = contact.Company;
                     existingContact.LastUpdated = DateTime.UtcNow;
-                    
+
                     _context.Contacts.Update(existingContact);
                 }
                 else
@@ -244,10 +244,10 @@ public class LdapService
                     contacts.Add(contact);
                 }
             }
-            
+
             // Сохраняем изменения в базе данных
             await _context.SaveChangesAsync();
-            
+
             return contacts;
         }
         catch (Exception ex)

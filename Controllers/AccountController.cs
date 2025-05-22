@@ -7,19 +7,13 @@ using ad_tels.Services;
 
 namespace ad_tels.Controllers;
 
-public class AccountController : Controller
+public class AccountController(ILdapAuthService authService, ILogger<AccountController> logger) : Controller
 {
-    private readonly ILdapAuthService _authService;
-    private readonly ILogger<AccountController> _logger;
-
-    public AccountController(ILdapAuthService authService, ILogger<AccountController> logger)
-    {
-        _authService = authService;
-        _logger = logger;
-    }
+    private readonly ILdapAuthService _authService = authService;
+    private readonly ILogger<AccountController> _logger = logger;
 
     [HttpGet]
-    public IActionResult Login(string returnUrl = null)
+    public IActionResult Login(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
         return View();
@@ -27,7 +21,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginModel model, string returnUrl = null)
+    public async Task<IActionResult> Login(LoginModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
 
