@@ -60,7 +60,8 @@ public class LdapAuthService : ILdapAuthService
             await connection.ConnectAsync(_settings.Server, _settings.Port);
 
             _logger.LogDebug("Подключение к LDAP серверу с учетными данными сервиса");
-            await connection.BindAsync(_settings.BindUsername, _settings.BindPassword);
+            var bindUsername = $"{_settings.BindUsername}@{_settings.Domain}";
+            await connection.BindAsync(bindUsername, _settings.BindPassword);
 
             var searchFilter = $"(&(objectClass=user)(sAMAccountName={username}))";
             _logger.LogDebug("Поиск пользователя с фильтром: {Filter}", searchFilter);
