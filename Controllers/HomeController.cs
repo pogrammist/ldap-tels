@@ -16,7 +16,7 @@ public class HomeController : Controller
     {
         return new
         {
-            name = "AD Tels API",
+            name = "Ldap Tels API",
             version = "1.0.0",
             description = "Телефонный справочник на основе данных из LDAP сервера",
             endpoints = new[]
