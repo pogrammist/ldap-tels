@@ -2,9 +2,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Novell.Directory.Ldap;
-using ad_tels.Configuration;
+using ldap_tels.Configuration;
 
-namespace ad_tels.Services;
+namespace ldap_tels.Services;
 
 public class LdapAuthService : ILdapAuthService
 {

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace ad_tels.Services;
+namespace ldap_tels.Services;
 
 public interface ILdapAuthService
 {

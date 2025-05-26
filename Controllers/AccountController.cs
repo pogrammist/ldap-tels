@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using ad_tels.Models;
-using ad_tels.Services;
+using ldap_tels.Models;
+using ldap_tels.Services;
 
-namespace ad_tels.Controllers;
+namespace ldap_tels.Controllers;
 
 public class AccountController(ILdapAuthService authService, ILogger<AccountController> logger) : Controller
 {

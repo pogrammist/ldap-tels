@@ -1,9 +1,9 @@
-using ad_tels.Data;
-using ad_tels.Services;
-using ad_tels.Configuration;
+using ldap_tels.Data;
+using ldap_tels.Services;
+using ldap_tels.Configuration;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using ad_tels.Models;
+using ldap_tels.Models;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
 

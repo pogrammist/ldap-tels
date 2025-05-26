@@ -1,4 +1,4 @@
-namespace ad_tels.Configuration;
+namespace ldap_tels.Configuration;
 
 public class LdapSettings
 {

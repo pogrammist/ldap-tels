@@ -1,10 +1,10 @@
-using ad_tels.Data;
-using ad_tels.Models;
+using ldap_tels.Data;
+using ldap_tels.Models;
 using Microsoft.EntityFrameworkCore;
 using System.DirectoryServices.Protocols;
 using System.Net;
 
-namespace ad_tels.Services;
+namespace ldap_tels.Services;
 
 public class LdapService
 {

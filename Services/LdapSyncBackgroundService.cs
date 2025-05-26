@@ -1,6 +1,6 @@
-using ad_tels.Services;
+using ldap_tels.Services;
 
-namespace ad_tels.Services;
+namespace ldap_tels.Services;
 
 public class LdapSyncBackgroundService : BackgroundService
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace ad_tels.Controllers;
+namespace ldap_tels.Controllers;
 
 public class HomeController : Controller
 {

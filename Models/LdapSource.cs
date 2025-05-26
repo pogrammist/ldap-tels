@@ -1,4 +1,4 @@
-namespace ad_tels.Models;
+namespace ldap_tels.Models;
 
 public class LdapSource
 {

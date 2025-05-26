@@ -1,8 +1,8 @@
-using ad_tels.Models;
-using ad_tels.Services;
+using ldap_tels.Models;
+using ldap_tels.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ad_tels.Controllers;
+namespace ldap_tels.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

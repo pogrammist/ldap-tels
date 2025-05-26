@@ -1,7 +1,7 @@
-using ad_tels.Models;
+using ldap_tels.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace ad_tels.Data;
+namespace ldap_tels.Data;
 
 public class ApplicationDbContext : DbContext
 {

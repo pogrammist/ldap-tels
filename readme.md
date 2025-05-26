@@ -44,7 +44,7 @@
 3. Запустить приложение:
 
 ```bash
-dotnet run --project ad_tels --urls http://localhost:5001/
+dotnet run --project ldap_tels --urls http://localhost:5001/
 ```
 
 4. Проверить работу API:
