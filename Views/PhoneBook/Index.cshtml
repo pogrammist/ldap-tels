@@ -49,6 +49,7 @@
                 <thead>
                     <tr>
                         <th>ФИО</th>
+                        <th>Подразделение</th>
                         <th>Отдел</th>
                         <th>Должность</th>
                         <th>Телефон</th>
@@ -61,6 +62,7 @@
                     {
                         <tr>
                             <td>@contact.DisplayName</td>
+                            <td>@contact.Division</td>
                             <td>
                                 <a asp-action="Department" asp-route-department="@contact.Department">
                                     @contact.Department

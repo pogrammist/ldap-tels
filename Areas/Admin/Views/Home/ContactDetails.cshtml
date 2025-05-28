@@ -33,6 +33,9 @@
                         <dt class="col-sm-4">Фамилия</dt>
                         <dd class="col-sm-8">@Model.LastName</dd>
 
+                        <dt class="col-sm-4">Подразделение</dt>
+                        <dd class="col-sm-8">@Model.Division</dd>
+
                         <dt class="col-sm-4">Отдел</dt>
                         <dd class="col-sm-8">
                             <a asp-area="Admin" asp-controller="Home" asp-action="ContactsByDepartment" asp-route-department="@Model.Department">

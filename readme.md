@@ -83,7 +83,7 @@ curl http://localhost:5001/api
 - `BaseDn` - базовый DN для поиска
 - `BindDn` - DN для аутентификации (опционально)
 - `BindPassword` - пароль для аутентификации (опционально)
-- `SearchFilter` - фильтр поиска (по умолчанию `(&(objectClass=person)(|(sn=*)(cn=*)))`)
+- `SearchFilter` - фильтр поиска (по умолчанию `(& (objectCategory=person) (objectClass=user) (!(userAccountControl:1.2.840.113556.1.4.803:=2)) (telephoneNumber=*))`)
 - `UseSSL` - использовать SSL (по умолчанию `false`)
 
 ## Настройка автоматической синхронизации
