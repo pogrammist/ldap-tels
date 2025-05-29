@@ -38,9 +38,16 @@
 
                         <dt class="col-sm-4">Отдел</dt>
                         <dd class="col-sm-8">
-                            <a asp-area="Admin" asp-controller="Home" asp-action="ContactsByDepartment" asp-route-department="@Model.Department">
-                                @Model.Department
-                            </a>
+                            @if (!string.IsNullOrEmpty(Model.Department))
+                            {
+                                <a asp-area="Admin" asp-controller="Home" asp-action="ContactsByDepartment" asp-route-department="@Model.Department">
+                                    @Model.Department
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Не указан</span>
+                            }
                         </dd>
 
                         <dt class="col-sm-4">Должность</dt>
@@ -65,18 +72,6 @@
                             @if (!string.IsNullOrEmpty(Model.PhoneNumber))
                             {
                                 <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Не указан</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">Мобильный</dt>
-                        <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.Mobile))
-                            {
-                                <a href="tel:@Model.Mobile">@Model.Mobile</a>
                             }
                             else
                             {

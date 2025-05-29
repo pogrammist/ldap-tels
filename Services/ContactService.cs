@@ -54,7 +54,6 @@ public class ContactService
                 c.LastName.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.PhoneNumber.Contains(searchTerm) ||
-                c.Mobile.Contains(searchTerm) ||
                 c.Department.ToLower().Contains(searchTerm) ||
                 c.Title.ToLower().Contains(searchTerm) ||
                 c.Company.ToLower().Contains(searchTerm)
@@ -81,7 +80,6 @@ public class ContactService
                 c.LastName.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.PhoneNumber.Contains(searchTerm) ||
-                c.Mobile.Contains(searchTerm) ||
                 c.Department.ToLower().Contains(searchTerm) ||
                 c.Title.ToLower().Contains(searchTerm) ||
                 c.Company.ToLower().Contains(searchTerm)

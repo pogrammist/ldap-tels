@@ -62,18 +62,6 @@
                         }
                     </dd>
                     
-                    <dt class="col-sm-4">Мобильный:</dt>
-                    <dd class="col-sm-8">
-                        @if (!string.IsNullOrEmpty(Model.Mobile))
-                        {
-                            <a href="tel:@Model.Mobile">@Model.Mobile</a>
-                        }
-                        else
-                        {
-                            <span class="text-muted">Не указан</span>
-                        }
-                    </dd>
-                    
                     <dt class="col-sm-4">Отдел:</dt>
                     <dd class="col-sm-8">
                         @if (!string.IsNullOrEmpty(Model.Department))
