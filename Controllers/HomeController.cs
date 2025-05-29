@@ -7,6 +7,12 @@ public class HomeController : Controller
     [HttpGet]
     public IActionResult Index()
     {
+        return RedirectToAction("Index", "PhoneBook");
+    }
+
+    [HttpGet("admin")]
+    public IActionResult Admin()
+    {
         return View();
     }
 
