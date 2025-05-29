@@ -147,7 +147,7 @@ public class LdapService
                 source.BaseDn,
                 source.SearchFilter,
                 System.DirectoryServices.Protocols.SearchScope.Subtree,
-                "cn", "sn", "givenName", "mail", "telephoneNumber", "mobile", "division",
+                "cn", "sn", "givenName", "mail", "telephoneNumber", "division",
                 "department", "title", "company", "displayName"
             );
 
@@ -190,11 +190,6 @@ public class LdapService
                     contact.PhoneNumber = entry.Attributes["telephoneNumber"][0] as string ?? string.Empty;
                 }
 
-                if (entry.Attributes.Contains("mobile"))
-                {
-                    contact.Mobile = entry.Attributes["mobile"][0] as string ?? string.Empty;
-                }
-
                 if (entry.Attributes.Contains("department"))
                 {
                     contact.Department = entry.Attributes["department"][0] as string ?? string.Empty;
@@ -234,7 +229,6 @@ public class LdapService
                     existingContact.LastName = contact.LastName;
                     existingContact.Email = contact.Email;
                     existingContact.PhoneNumber = contact.PhoneNumber;
-                    existingContact.Mobile = contact.Mobile;
                     existingContact.Department = contact.Department;
                     existingContact.Title = contact.Title;
                     existingContact.Company = contact.Company;
