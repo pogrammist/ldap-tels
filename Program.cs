@@ -9,6 +9,12 @@ using Swashbuckle.AspNetCore.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Добавляем конфигурацию в зависимости от окружения
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Добавляем сервисы в контейнер
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
@@ -80,7 +86,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Создание базы данных при запуске приложения
+// Создание базы данных и инициализация тестовых данных при запуске приложения
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -88,6 +94,12 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.EnsureCreated();
+
+        // Инициализация тестовых данных только в Development окружении
+        if (app.Environment.IsDevelopment())
+        {
+            await DbInitializer.InitializeAsync(context);
+        }
     }
     catch (Exception ex)
     {
