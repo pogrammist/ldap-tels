@@ -153,4 +153,31 @@ public class HomeController : Controller
             return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список контактов. Пожалуйста, попробуйте позже." });
         }
     }
+
+    public async Task<IActionResult> ContactsByDepartment(string department, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(department))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
+            var totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.Department = department;
+
+            return View("Contacts", contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке контактов отдела: {Department}", department);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить контакты отдела {department}. Пожалуйста, попробуйте позже." });
+        }
+    }
 }
