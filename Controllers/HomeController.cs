@@ -99,8 +99,8 @@ public class HomeController : Controller
         }
     }
 
-    [HttpGet("admin")]
-    public IActionResult Admin()
+    [HttpGet("docs")]
+    public IActionResult Docs()
     {
         return View();
     }
