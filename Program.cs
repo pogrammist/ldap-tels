@@ -45,7 +45,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Регистрация сервисов
 builder.Services.Configure<LdapSettings>(builder.Configuration.GetSection("LdapSettings"));
-builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
+
+// Регистрация сервиса аутентификации в зависимости от окружения
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<ILdapAuthService, DevAuthService>();
+}
+else
+{
+    builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
+}
+
 builder.Services.AddScoped<LdapService>();
 builder.Services.AddScoped<ContactService>();
 builder.Services.AddHostedService<LdapSyncBackgroundService>();
