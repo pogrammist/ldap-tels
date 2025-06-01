@@ -132,4 +132,25 @@ public class HomeController : Controller
             timestamp = DateTime.UtcNow
         };
     }
+
+    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
+            var totalCount = await _contactService.GetTotalContactsCountAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            return View(contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке списка контактов");
+            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список контактов. Пожалуйста, попробуйте позже." });
+        }
+    }
 }
