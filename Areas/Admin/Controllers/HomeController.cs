@@ -14,8 +14,8 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
 
     public HomeController(
-        LdapService ldapService, 
-        ContactService contactService, 
+        LdapService ldapService,
+        ContactService contactService,
         ILogger<HomeController> logger)
     {
         _ldapService = ldapService;
@@ -233,12 +233,12 @@ public class HomeController : Controller
         {
             var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
-            
+
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-            
+
             return View(contacts);
         }
         catch (Exception ex)
@@ -277,13 +277,13 @@ public class HomeController : Controller
 
             var contacts = await _contactService.SearchContactsAsync(query, page, pageSize);
             var totalCount = await _contactService.GetSearchResultsCountAsync(query);
-            
+
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
             ViewBag.SearchQuery = query;
-            
+
             return View("Contacts", contacts);
         }
         catch (Exception ex)
@@ -299,13 +299,13 @@ public class HomeController : Controller
         {
             var contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
             var totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
-            
+
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
             ViewBag.Department = department;
-            
+
             return View("Contacts", contacts);
         }
         catch (Exception ex)

@@ -15,24 +15,26 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Index()
     {
         try
         {
-            var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
+            var contacts = await _contactService.GetAllContactsAsync(1, 20);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
+            var departments = await _contactService.GetAllDepartmentsAsync();
 
-            ViewBag.CurrentPage = page;
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = 1;
+            ViewBag.PageSize = 20;
             ViewBag.TotalCount = totalCount;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / 20.0);
+            ViewBag.Departments = departments;
 
             return View(contacts);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка при загрузке списка контактов");
-            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список контактов. Пожалуйста, попробуйте позже." });
+            _logger.LogError(ex, "Ошибка при загрузке данных для главной страницы");
+            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить данные. Пожалуйста, попробуйте позже." });
         }
     }
 
@@ -82,20 +84,6 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "Ошибка при загрузке контактов отдела: {Department}", department);
             return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить контакты отдела {department}. Пожалуйста, попробуйте позже." });
-        }
-    }
-
-    public async Task<IActionResult> Departments()
-    {
-        try
-        {
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            return View(departments);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при загрузке списка отделов");
-            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список отделов. Пожалуйста, попробуйте позже." });
         }
     }
 
@@ -158,11 +146,6 @@ public class HomeController : Controller
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(department))
-            {
-                return RedirectToAction(nameof(Index));
-            }
-
             var contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
             var totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
 
@@ -178,6 +161,20 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "Ошибка при загрузке контактов отдела: {Department}", department);
             return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить контакты отдела {department}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    public async Task<IActionResult> Departments()
+    {
+        try
+        {
+            var departments = await _contactService.GetAllDepartmentsAsync();
+            return View(departments);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке списка отделов");
+            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список отделов. Пожалуйста, попробуйте позже." });
         }
     }
 }

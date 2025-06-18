@@ -62,7 +62,7 @@ public class AccountController(ILdapAuthService authService, ILogger<AccountCont
                     }
                     else
                     {
-                        return RedirectToAction("Index", "Admin");
+                        return RedirectToAction("Index", "Home", new { area = "Admin" });
                     }
                 }
                 else
