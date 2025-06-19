@@ -38,7 +38,7 @@
                                     <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">Админ-панель</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline">
                                             <button type="submit" class="dropdown-item">
                                                 <i class="bi bi-box-arrow-right"></i> Выход
                                             </button>
@@ -50,7 +50,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link btn btn-outline-primary" asp-controller="Account" asp-action="Login">
+                                <a class="nav-link btn btn-outline-primary" asp-controller="Admin" asp-action="Login">
                                     <i class="bi bi-box-arrow-in-right"></i> Вход
                                 </a>
                             </li>
