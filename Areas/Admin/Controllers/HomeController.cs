@@ -26,7 +26,12 @@ public class HomeController : Controller
     }
 
     [AllowAnonymous]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
+    {
+        return View();
+    }
+
+    public async Task<IActionResult> Dashboard()
     {
         try
         {
