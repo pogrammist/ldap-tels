@@ -1,129 +1,143 @@
-@model ldap_tels.Models.Contact
-
+@model Contact
 @{
     ViewData["Title"] = "Детали контакта";
 }
 
-<div class="container">
-    <h1 class="mb-4">Детали контакта</h1>
-
-    <div class="mb-3">
-        <a asp-area="Admin" asp-controller="Home" asp-action="Contacts" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Назад к списку
-        </a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Детали контакта</h1>
+    <div>
+        @if (!string.IsNullOrEmpty(Model.Department))
+        {
+            <a asp-action="ContactsByDepartment" asp-route-department="@Model.Department" class="btn btn-info">
+                <i class="bi bi-people"></i> Все контакты отдела
+            </a>
+        }
     </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Основная информация</h5>
-                </div>
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">@Model.Id</dd>
-
-                        <dt class="col-sm-4">ФИО</dt>
-                        <dd class="col-sm-8">@Model.DisplayName</dd>
-
-                        <dt class="col-sm-4">Имя</dt>
-                        <dd class="col-sm-8">@Model.FirstName</dd>
-
-                        <dt class="col-sm-4">Фамилия</dt>
-                        <dd class="col-sm-8">@Model.LastName</dd>
-
-                        <dt class="col-sm-4">Подразделение</dt>
-                        <dd class="col-sm-8">@Model.Division</dd>
-
-                        <dt class="col-sm-4">Отдел</dt>
-                        <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.Department))
-                            {
-                                <a asp-area="Admin" asp-controller="Home" asp-action="ContactsByDepartment" asp-route-department="@Model.Department">
-                                    @Model.Department
-                                </a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Не указан</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">Должность</dt>
-                        <dd class="col-sm-8">@Model.Title</dd>
-
-                        <dt class="col-sm-4">Компания</dt>
-                        <dd class="col-sm-8">@Model.Company</dd>
-                    </dl>
-                </div>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Основная информация</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">ID:</dt>
+                    <dd class="col-sm-8">@Model.Id</dd>
+                    
+                    <dt class="col-sm-4">Отображаемое имя:</dt>
+                    <dd class="col-sm-8">@Model.DisplayName</dd>
+                    
+                    <dt class="col-sm-4">Имя:</dt>
+                    <dd class="col-sm-8">@Model.FirstName</dd>
+                    
+                    <dt class="col-sm-4">Фамилия:</dt>
+                    <dd class="col-sm-8">@Model.LastName</dd>
+                    
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <a href="mailto:@Model.Email">@Model.Email</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указан</span>
+                        }
+                    </dd>
+                </dl>
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Контактная информация</h5>
-                </div>
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-4">Телефон</dt>
-                        <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.PhoneNumber))
-                            {
-                                <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Не указан</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">Email</dt>
-                        <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.Email))
-                            {
-                                <a href="mailto:@Model.Email">@Model.Email</a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Не указан</span>
-                            }
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h5>Информация об источнике</h5>
-                </div>
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-4">LDAP-источник</dt>
-                        <dd class="col-sm-8">
-                            @if (Model.LdapSource != null)
-                            {
-                                <a asp-area="Admin" asp-controller="Home" asp-action="LdapSourceDetails" asp-route-id="@Model.LdapSourceId">
-                                    @Model.LdapSource.Name
-                                </a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Нет</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">Distinguished Name</dt>
-                        <dd class="col-sm-8">
-                            <small class="text-muted">@Model.DistinguishedName</small>
-                        </dd>
-
-                        <dt class="col-sm-4">Последнее обновление</dt>
-                        <dd class="col-sm-8">@Model.LastUpdated.ToString("dd.MM.yyyy HH:mm:ss")</dd>
-                    </dl>
-                </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Телефон:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                        {
+                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указан</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Отдел:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Department))
+                        {
+                            <a asp-action="ContactsByDepartment" asp-route-department="@Model.Department">
+                                @Model.Department
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указан</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Должность:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Title))
+                        {
+                            @Model.Title
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указана</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-4">Компания:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Company))
+                        {
+                            @Model.Company
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указана</span>
+                        }
+                    </dd>
+                </dl>
             </div>
         </div>
     </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Информация об источнике</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">LDAP-источник:</dt>
+            <dd class="col-sm-9">
+                @if (Model.LdapSource != null)
+                {
+                    <a asp-action="LdapSourceDetails" asp-route-id="@Model.LdapSourceId">
+                        @Model.LdapSource.Name
+                    </a>
+                }
+                else
+                {
+                    <span class="text-muted">Не указан</span>
+                }
+            </dd>
+            
+            <dt class="col-sm-3">Distinguished Name:</dt>
+            <dd class="col-sm-9">
+                <code>@Model.DistinguishedName</code>
+            </dd>
+            
+            <dt class="col-sm-3">Последнее обновление:</dt>
+            <dd class="col-sm-9">
+                @Model.LastUpdated.ToString("dd.MM.yyyy HH:mm:ss")
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="Contacts" class="btn btn-secondary">Вернуться к списку контактов</a>
 </div>

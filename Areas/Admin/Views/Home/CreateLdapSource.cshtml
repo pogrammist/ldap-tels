@@ -56,7 +56,7 @@
                         <label asp-for="SearchFilter" class="form-label">Фильтр поиска</label>
                         <input asp-for="SearchFilter" class="form-control" />
                         <span asp-validation-for="SearchFilter" class="text-danger"></span>
-                        <small class="form-text text-muted">Например: (& (objectCategory=person) (objectClass=user) (!(userAccountControl:1.2.840.113556.1.4.803:=2)) (telephoneNumber=*))</small>
+                        <small class="form-text text-muted">Например: (&(objectClass=person)(|(sn=*)(cn=*)))</small>
                     </div>
                     
                     <div class="mb-3 form-check">
