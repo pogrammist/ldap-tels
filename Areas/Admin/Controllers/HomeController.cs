@@ -2,6 +2,8 @@ using ldap_tels.Models;
 using ldap_tels.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace ldap_tels.Areas.Admin.Controllers;
 
@@ -23,6 +25,7 @@ public class HomeController : Controller
         _logger = logger;
     }
 
+    [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
         try
