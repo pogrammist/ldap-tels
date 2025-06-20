@@ -19,6 +19,7 @@ public class ContactService
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
+            .Where(c => c.LdapSource == null || c.LdapSource.IsActive)
             .OrderBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -27,14 +28,17 @@ public class ContactService
 
     public async Task<int> GetTotalContactsCountAsync()
     {
-        return await _context.Contacts.CountAsync();
+        return await _context.Contacts
+            .Include(c => c.LdapSource)
+            .Where(c => c.LdapSource == null || c.LdapSource.IsActive)
+            .CountAsync();
     }
 
     public async Task<Contact?> GetContactByIdAsync(int id)
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id && (c.LdapSource == null || c.LdapSource.IsActive));
     }
 
     public async Task<IEnumerable<Contact>> SearchContactsAsync(string searchTerm, int page = 1, int pageSize = 50)
@@ -48,15 +52,15 @@ public class ContactService
 
         return await _context.Contacts
             .Include(c => c.LdapSource)
-            .Where(c => 
-                c.DisplayName.ToLower().Contains(searchTerm) ||
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) &&
+                (c.DisplayName.ToLower().Contains(searchTerm) ||
                 c.FirstName.ToLower().Contains(searchTerm) ||
                 c.LastName.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.PhoneNumber.Contains(searchTerm) ||
                 c.Department.ToLower().Contains(searchTerm) ||
                 c.Title.ToLower().Contains(searchTerm) ||
-                c.Company.ToLower().Contains(searchTerm)
+                c.Company.ToLower().Contains(searchTerm))
             )
             .OrderBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
@@ -74,15 +78,16 @@ public class ContactService
         searchTerm = searchTerm.ToLower();
 
         return await _context.Contacts
-            .Where(c => 
-                c.DisplayName.ToLower().Contains(searchTerm) ||
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) &&
+                (c.DisplayName.ToLower().Contains(searchTerm) ||
                 c.FirstName.ToLower().Contains(searchTerm) ||
                 c.LastName.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.PhoneNumber.Contains(searchTerm) ||
                 c.Department.ToLower().Contains(searchTerm) ||
                 c.Title.ToLower().Contains(searchTerm) ||
-                c.Company.ToLower().Contains(searchTerm)
+                c.Company.ToLower().Contains(searchTerm))
             )
             .CountAsync();
     }
@@ -91,7 +96,7 @@ public class ContactService
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
-            .Where(c => c.Department.ToLower() == department.ToLower())
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Department.ToLower() == department.ToLower())
             .OrderBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -111,7 +116,8 @@ public class ContactService
     public async Task<int> GetContactsByDepartmentCountAsync(string department)
     {
         return await _context.Contacts
-            .Where(c => c.Department.ToLower() == department.ToLower())
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Department.ToLower() == department.ToLower())
             .CountAsync();
     }
 }
