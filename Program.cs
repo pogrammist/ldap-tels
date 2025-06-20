@@ -27,8 +27,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Admin/Login";
-        options.AccessDeniedPath = "/Admin/Index";
+        options.LoginPath = "/Admin/Account/Login";
+        options.AccessDeniedPath = "/Admin/Account/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });

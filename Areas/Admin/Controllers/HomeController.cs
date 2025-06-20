@@ -25,13 +25,7 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    [AllowAnonymous]
-    public IActionResult Index()
-    {
-        return View();
-    }
-
-    public async Task<IActionResult> Dashboard()
+    public async Task<IActionResult> Index()
     {
         try
         {
