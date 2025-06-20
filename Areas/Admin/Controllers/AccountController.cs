@@ -94,7 +94,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Login", "Account", new { area = "Admin" });
     }
 
     [HttpPost]
