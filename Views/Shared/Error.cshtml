@@ -1,40 +1,25 @@
-@model ldap_tels.Models.ErrorViewModel
+@model ErrorViewModel
 @{
     ViewData["Title"] = "Ошибка";
-    Layout = "_PublicLayout";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h4>Ошибка</h4>
-                </div>
-                <div class="card-body">
-                    <h5 class="text-danger">Произошла ошибка при обработке вашего запроса.</h5>
-                    
-                    @if (Model.ShowRequestId)
-                    {
-                        <p>
-                            <strong>Идентификатор запроса:</strong> <code>@Model.RequestId</code>
-                        </p>
-                    }
-                    
-                    @if (!string.IsNullOrEmpty(Model.Message))
-                    {
-                        <div class="alert alert-danger mt-3">
-                            @Model.Message
-                        </div>
-                    }
-                    
-                    <div class="mt-4">
-                        <a asp-controller="PhoneBook" asp-action="Index" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Вернуться на главную
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<h1 class="text-danger">Ошибка</h1>
+<h2 class="text-danger">Произошла ошибка при обработке вашего запроса.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Идентификатор запроса:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-danger">
+        @Model.Message
     </div>
+}
+
+<div>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-primary">Вернуться на главную</a>
 </div>
