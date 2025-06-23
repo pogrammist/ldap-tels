@@ -41,7 +41,7 @@ builder.Services.AddAuthorization(options =>
 
 // Настройка базы данных
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Регистрация сервисов
 builder.Services.Configure<LdapSettings>(builder.Configuration.GetSection("LdapSettings"));
