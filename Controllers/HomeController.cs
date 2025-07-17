@@ -56,6 +56,12 @@ public class HomeController : Controller
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
             ViewBag.SearchQuery = query;
 
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                // Возвращаем только таблицу (partial)
+                return PartialView("_ContactsTablePartial", contacts);
+            }
+
             return View("Index", contacts);
         }
         catch (Exception ex)
