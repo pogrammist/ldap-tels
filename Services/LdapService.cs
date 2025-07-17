@@ -94,14 +94,56 @@ public class LdapService
         {
             _logger.LogInformation("Начало синхронизации с LDAP-сервером: {Name}", source.Name);
 
-            var contacts = await GetContactsFromLdapAsync(source);
+            // Получаем контакты из LDAP
+            var ldapContacts = await GetContactsFromLdapAsync(source);
+            var ldapDns = ldapContacts.Select(c => c.DistinguishedName).ToHashSet();
+
+            // Получаем все контакты из базы для этого источника
+            var dbContacts = await _context.Contacts
+                .Where(c => c.LdapSourceId == source.Id)
+                .ToListAsync();
+            var dbContactsByDn = dbContacts.ToDictionary(c => c.DistinguishedName, c => c);
+
+            // 1. Удаляем устаревшие контакты
+            var toDelete = dbContacts.Where(c => !ldapDns.Contains(c.DistinguishedName)).ToList();
+            if (toDelete.Count > 0)
+            {
+                _context.Contacts.RemoveRange(toDelete);
+                _logger.LogInformation($"Удалено {toDelete.Count} устаревших контактов для источника {source.Name}");
+            }
+
+            // 2. Обновляем существующие и добавляем новые
+            foreach (var ldapContact in ldapContacts)
+            {
+                if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName, out var dbContact))
+                {
+                    // Обновляем существующий контакт
+                    dbContact.DisplayName = ldapContact.DisplayName;
+                    dbContact.FirstName = ldapContact.FirstName;
+                    dbContact.LastName = ldapContact.LastName;
+                    dbContact.Email = ldapContact.Email;
+                    dbContact.PhoneNumber = ldapContact.PhoneNumber;
+                    dbContact.Department = ldapContact.Department;
+                    dbContact.Division = ldapContact.Division;
+                    dbContact.Title = ldapContact.Title;
+                    dbContact.Company = ldapContact.Company;
+                    dbContact.LastUpdated = DateTime.UtcNow;
+                    _context.Contacts.Update(dbContact);
+                }
+                else
+                {
+                    // Добавляем новый контакт
+                    ldapContact.LastUpdated = DateTime.UtcNow;
+                    _context.Contacts.Add(ldapContact);
+                }
+            }
 
             // Обновляем время последней синхронизации
             source.LastSyncTime = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Синхронизация с LDAP-сервером {Name} завершена. Получено {Count} контактов",
-                source.Name, contacts.Count);
+                source.Name, ldapContacts.Count);
         }
         catch (Exception ex)
         {
@@ -110,6 +152,7 @@ public class LdapService
         }
     }
 
+    // Получение контактов из LDAP (только fetch, без работы с базой)
     private async Task<List<Contact>> GetContactsFromLdapAsync(LdapSource source)
     {
         var contacts = new List<Contact>();
@@ -217,35 +260,8 @@ public class LdapService
                     contact.DisplayName = $"{contact.FirstName} {contact.LastName}".Trim();
                 }
 
-                // Проверяем, существует ли уже контакт с таким DN
-                var existingContact = await _context.Contacts
-                    .FirstOrDefaultAsync(c => c.DistinguishedName == contact.DistinguishedName);
-
-                if (existingContact != null)
-                {
-                    // Обновляем существующий контакт
-                    existingContact.DisplayName = contact.DisplayName;
-                    existingContact.FirstName = contact.FirstName;
-                    existingContact.LastName = contact.LastName;
-                    existingContact.Email = contact.Email;
-                    existingContact.PhoneNumber = contact.PhoneNumber;
-                    existingContact.Department = contact.Department;
-                    existingContact.Title = contact.Title;
-                    existingContact.Company = contact.Company;
-                    existingContact.LastUpdated = DateTime.UtcNow;
-
-                    _context.Contacts.Update(existingContact);
-                }
-                else
-                {
-                    // Добавляем новый контакт
-                    _context.Contacts.Add(contact);
-                    contacts.Add(contact);
-                }
+                contacts.Add(contact);
             }
-
-            // Сохраняем изменения в базе данных
-            await _context.SaveChangesAsync();
 
             return contacts;
         }
