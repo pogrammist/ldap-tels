@@ -130,7 +130,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> ContactsByDivision(string division, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 20)
     {
         try
         {
@@ -166,7 +166,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> ContactsByDepartment(string department, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 20)
     {
         try
         {
