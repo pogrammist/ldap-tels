@@ -9,15 +9,16 @@
     var department = ViewBag.Department ?? string.Empty;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Контакты</h1>
-    <div>
-        <form asp-action="SearchContacts" method="get" class="d-flex">
-            <input type="text" name="query" class="form-control me-2" placeholder="Поиск..." value="@searchQuery">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-search"></i> Поиск
-            </button>
+<div class="mb-4">
+    <h1 class="mb-3">Контакты</h1>
+    <div class="d-flex align-items-stretch flex-wrap">
+        <form asp-action="SearchContacts" method="get" class="d-flex flex-grow-1 me-2 mb-2 mb-md-0">
+            <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
+            <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0">Очистить</button>
         </form>
+        <a asp-action="CreateContact" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить контакт
+        </a>
     </div>
 </div>
 
@@ -190,3 +191,59 @@ else
     <a asp-action="Departments" class="btn btn-info">Просмотр по отделам</a>
     <a asp-action="Titles" class="btn btn-info">Просмотр по должностям</a>
 </div>
+
+@section Scripts {
+    <script>
+        // Debounce функция
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const searchInput = document.getElementById('liveSearchInput');
+        const tableContainer = document.querySelector('.table-responsive');
+        const clearBtn = document.getElementById('clearSearchBtn');
+
+        function toggleClearBtn() {
+            if (searchInput && clearBtn) {
+                clearBtn.style.display = searchInput.value.length > 0 ? '' : 'none';
+            }
+        }
+
+        async function fetchContacts(query) {
+            const url = `/Home/Search?query=${encodeURIComponent(query)}`;
+            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (response.ok) {
+                const html = await response.text();
+                // Парсим только таблицу из ответа
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const newTable = tempDiv.querySelector('.table-responsive');
+                if (newTable && tableContainer) {
+                    tableContainer.innerHTML = newTable.innerHTML;
+                }
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(function(e) {
+                fetchContacts(e.target.value);
+                toggleClearBtn();
+            }, 350));
+            searchInput.addEventListener('input', toggleClearBtn);
+            window.addEventListener('DOMContentLoaded', toggleClearBtn);
+        }
+        if (clearBtn && searchInput) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                searchInput.value = '';
+                fetchContacts('');
+                toggleClearBtn();
+                searchInput.focus();
+            });
+        }
+    </script>
+}
