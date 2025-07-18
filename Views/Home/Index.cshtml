@@ -9,14 +9,13 @@
     <h1 class="mb-4">Телефонный справочник</h1>
 
     <div class="row mb-4">
-        <div class="col-md-6">
-            <form asp-action="Search" method="get" class="d-flex">
-                <input type="text" name="query" class="form-control me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
-                <button type="button" id="clearSearchBtn" class="btn btn-primary">Очистить</button>
+        <div class="col d-flex align-items-stretch">
+            <form asp-action="Search" method="get" class="d-flex flex-grow-1 me-2">
+                <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
+                <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0">Очистить</button>
             </form>
-        </div>
-        <div class="col-md-6 text-end">
-            <a asp-action="Departments" class="btn btn-outline-secondary">Отделы</a>
+            <a asp-action="Divisions" class="btn btn-outline-secondary me-2 flex-shrink-0">Подразделения</a>
+            <a asp-action="Departments" class="btn btn-outline-secondary flex-shrink-0">Отделы</a>
         </div>
     </div>
 

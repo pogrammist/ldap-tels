@@ -1,0 +1,41 @@
+@model IEnumerable<string>
+
+@{
+    ViewData["Title"] = "Подразделения";
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <h1 class="mb-4">Подразделения</h1>
+
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Вернуться к справочнику
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            Подразделения не найдены.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var division in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@division</h5>
+                            <a asp-action="Division" asp-route-division="@division" class="btn btn-primary">
+                                Показать сотрудников
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

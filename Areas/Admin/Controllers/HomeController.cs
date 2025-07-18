@@ -31,9 +31,11 @@ public class HomeController : Controller
         {
             var sources = await _ldapService.GetAllSourcesAsync();
             var totalContacts = await _contactService.GetTotalContactsCountAsync();
+            var divisions = await _contactService.GetAllDivisionsAsync();
             var departments = await _contactService.GetAllDepartmentsAsync();
 
             ViewBag.TotalContacts = totalContacts;
+            ViewBag.TotalDivisions = divisions.Count();
             ViewBag.TotalDepartments = departments.Count();
 
             return View(sources);
@@ -292,6 +294,42 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "Ошибка при поиске контактов по запросу: {Query}", query);
             return View("Error", new ErrorViewModel { Message = "Не удалось выполнить поиск контактов. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    public async Task<IActionResult> ContactsByDivision(string division, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            var contacts = await _contactService.GetContactsByDivisionAsync(division, page, pageSize);
+            var totalCount = await _contactService.GetContactsByDivisionCountAsync(division);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.Division = division;
+
+            return View("Contacts", contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке контактов подразделения: {Division}", division);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить контакты подразделения {division}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    public async Task<IActionResult> Divisions()
+    {
+        try
+        {
+            var divisions = await _contactService.GetAllDivisionsAsync();
+            return View(divisions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке списка подразделений");
+            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список подразделений. Пожалуйста, попробуйте позже." });
         }
     }
 

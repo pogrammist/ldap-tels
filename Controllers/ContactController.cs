@@ -74,6 +74,36 @@ public class ContactController : ControllerBase
         }
     }
 
+    [HttpGet("division")]
+    public async Task<ActionResult<IEnumerable<string>>> GetAllDivisions()
+    {
+        try
+        {
+            var divisions = await _contactService.GetAllDivisionsAsync();
+            return Ok(divisions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении списка подразделений");
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
+    }
+
+    [HttpGet("division/{division}")]
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDivision(string division, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    {
+        try
+        {
+            var contacts = await _contactService.GetContactsByDivisionAsync(division, page, pageSize);
+            return Ok(contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении контактов подразделения: {Division}", division);
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
+    }
+
     [HttpGet("departments")]
     public async Task<ActionResult<IEnumerable<string>>> GetAllDepartments()
     {

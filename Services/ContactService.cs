@@ -94,6 +94,35 @@ public class ContactService
             .CountAsync();
     }
 
+    public async Task<IEnumerable<Contact>> GetContactsByDivisionAsync(string division, int page = 1, int pageSize = 50)
+    {
+        return await _context.Contacts
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Division.ToLower() == division.ToLower())
+            .OrderBy(c => c.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<string>> GetAllDivisionsAsync()
+    {
+        return await _context.Contacts
+            .Where(c => !string.IsNullOrEmpty(c.Division))
+            .Select(c => c.Division)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetContactsByDivisionCountAsync(string division)
+    {
+        return await _context.Contacts
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Division.ToLower() == division.ToLower())
+            .CountAsync();
+    }
+
     public async Task<IEnumerable<Contact>> GetContactsByDepartmentAsync(string department, int page = 1, int pageSize = 50)
     {
         return await _context.Contacts

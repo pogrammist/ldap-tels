@@ -16,7 +16,11 @@
             {
                 <tr>
                     <td>@contact.DisplayName</td>
-                    <td>@contact.Division</td>
+                    <td>
+                        <a asp-action="Division" asp-route-division="@contact.Division">
+                            @contact.Division
+                        </a>
+                    </td>
                     <td>
                         <a asp-action="Department" asp-route-department="@contact.Department">
                             @contact.Department
