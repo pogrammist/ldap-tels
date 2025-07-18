@@ -86,7 +86,7 @@ else
                                 <td>
                                     @if (!string.IsNullOrEmpty(contact.Department))
                                     {
-                                        <a asp-action="ContactsByDepartment" asp-route-department="@contact.Department">
+                                        <a asp-action="Department" asp-route-department="@contact.Department">
                                             @contact.Department
                                         </a>
                                     }

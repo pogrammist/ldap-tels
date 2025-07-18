@@ -51,7 +51,7 @@
                     {
                         <li class="page-item">
                             <a class="page-link" 
-                               asp-action="@(ViewBag.Department != null ? "ContactsByDepartment" : "Contacts")" 
+                               asp-action="@(ViewBag.Department != null ? "Department" : "Contacts")" 
                                asp-route-page="1"
                                asp-route-department="@ViewBag.Department">
                                 &laquo;
@@ -59,7 +59,7 @@
                         </li>
                         <li class="page-item">
                             <a class="page-link" 
-                               asp-action="@(ViewBag.Department != null ? "ContactsByDepartment" : "Contacts")" 
+                               asp-action="@(ViewBag.Department != null ? "Department" : "Contacts")" 
                                asp-route-page="@(ViewBag.CurrentPage - 1)"
                                asp-route-department="@ViewBag.Department">
                                 &lt;
@@ -71,7 +71,7 @@
                     {
                         <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
                             <a class="page-link" 
-                               asp-action="@(ViewBag.Department != null ? "ContactsByDepartment" : "Contacts")" 
+                               asp-action="@(ViewBag.Department != null ? "Department" : "Contacts")" 
                                asp-route-page="@i"
                                asp-route-department="@ViewBag.Department">
                                 @i
@@ -83,7 +83,7 @@
                     {
                         <li class="page-item">
                             <a class="page-link" 
-                               asp-action="@(ViewBag.Department != null ? "ContactsByDepartment" : "Contacts")" 
+                               asp-action="@(ViewBag.Department != null ? "Department" : "Contacts")" 
                                asp-route-page="@(ViewBag.CurrentPage + 1)"
                                asp-route-department="@ViewBag.Department">
                                 &gt;
@@ -91,7 +91,7 @@
                         </li>
                         <li class="page-item">
                             <a class="page-link" 
-                               asp-action="@(ViewBag.Department != null ? "ContactsByDepartment" : "Contacts")" 
+                               asp-action="@(ViewBag.Department != null ? "Department" : "Contacts")" 
                                asp-route-page="@ViewBag.TotalPages"
                                asp-route-department="@ViewBag.Department">
                                 &raquo;
