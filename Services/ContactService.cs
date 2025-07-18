@@ -151,4 +151,33 @@ public class ContactService
             .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Department.ToLower() == department.ToLower())
             .CountAsync();
     }
+
+    public async Task<IEnumerable<Contact>> GetContactsByTitleAsync(string title, int page = 1, int pageSize = 50)
+    {
+        return await _context.Contacts
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Title.ToLower() == title.ToLower())
+            .OrderBy(c => c.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<string>> GetAllTitlesAsync()
+    {
+        return await _context.Contacts
+            .Where(c => !string.IsNullOrEmpty(c.Title))
+            .Select(c => c.Title)
+            .Distinct()
+            .OrderBy(t => t)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetContactsByTitleCountAsync(string title)
+    {
+        return await _context.Contacts
+            .Include(c => c.LdapSource)
+            .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Title.ToLower() == title.ToLower())
+            .CountAsync();
+    }
 }

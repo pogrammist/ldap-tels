@@ -133,4 +133,34 @@ public class ContactController : ControllerBase
             return StatusCode(500, "Внутренняя ошибка сервера");
         }
     }
+
+    [HttpGet("title")]
+    public async Task<ActionResult<IEnumerable<string>>> GetAllTitles()
+    {
+        try
+        {
+            var titles = await _contactService.GetAllTitlesAsync();
+            return Ok(titles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении списка должностей");
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
+    }
+
+    [HttpGet("title/{title}")]
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByTitle(string title, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    {
+        try
+        {
+            var contacts = await _contactService.GetContactsByTitleAsync(title, page, pageSize);
+            return Ok(contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении контактов должности: {Title}", title);
+            return StatusCode(500, "Внутренняя ошибка сервера");
+        }
+    }
 }

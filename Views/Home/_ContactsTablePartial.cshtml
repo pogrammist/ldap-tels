@@ -26,7 +26,11 @@
                             @contact.Department
                         </a>
                     </td>
-                    <td>@contact.Title</td>
+                    <td>
+                        <a asp-action="Title" asp-route-title="@contact.Title">
+                            @contact.Title
+                        </a>
+                    </td>
                     <td>@contact.PhoneNumber</td>
                     <td>
                         @if (!string.IsNullOrEmpty(contact.Email))

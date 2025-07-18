@@ -33,10 +33,12 @@ public class HomeController : Controller
             var totalContacts = await _contactService.GetTotalContactsCountAsync();
             var divisions = await _contactService.GetAllDivisionsAsync();
             var departments = await _contactService.GetAllDepartmentsAsync();
+            var titles = await _contactService.GetAllTitlesAsync();
 
             ViewBag.TotalContacts = totalContacts;
             ViewBag.TotalDivisions = divisions.Count();
             ViewBag.TotalDepartments = departments.Count();
+            ViewBag.TotalTitles = titles.Count();
 
             return View(sources);
         }
@@ -366,6 +368,42 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "Ошибка при загрузке списка отделов");
             return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список отделов. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            var contacts = await _contactService.GetContactsByTitleAsync(title, page, pageSize);
+            var totalCount = await _contactService.GetContactsByTitleCountAsync(title);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.Title = title;
+
+            return View("Contacts", contacts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке контактов должности: {Title}", title);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить контакты должности {title}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    public async Task<IActionResult> Titles()
+    {
+        try
+        {
+            var titles = await _contactService.GetAllTitlesAsync();
+            return View(titles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке списка должностей");
+            return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список должностей. Пожалуйста, попробуйте позже." });
         }
     }
 }
