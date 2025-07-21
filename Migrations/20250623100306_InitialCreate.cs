@@ -49,7 +49,7 @@ namespace ldap_tels.Migrations
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Company = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DistinguishedName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LdapSourceId = table.Column<int>(type: "int", nullable: false),
+                    LdapSourceId = table.Column<int>(type: "int", nullable: true),
                     LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

@@ -406,4 +406,23 @@ public class HomeController : Controller
             return View("Error", new ErrorViewModel { Message = "Не удалось загрузить список должностей. Пожалуйста, попробуйте позже." });
         }
     }
+
+    [HttpGet]
+    public IActionResult CreateContact()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateContact(Contact contact)
+    {
+        if (ModelState.IsValid)
+        {
+            contact.LdapSourceId = null;
+            await _contactService.AddContactAsync(contact);
+            return RedirectToAction("Contacts");
+        }
+        return View(contact);
+    }
 }

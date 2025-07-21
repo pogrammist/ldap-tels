@@ -68,7 +68,7 @@ namespace ldap_tels.Migrations
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("LdapSourceId")
+                    b.Property<int?>("LdapSourceId")
                         .HasColumnType("int");
 
                     b.Property<string>("PhoneNumber")
@@ -149,7 +149,7 @@ namespace ldap_tels.Migrations
                         .WithMany()
                         .HasForeignKey("LdapSourceId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired(false);
 
                     b.Navigation("LdapSource");
                 });

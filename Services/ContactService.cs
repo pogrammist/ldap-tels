@@ -180,4 +180,10 @@ public class ContactService
             .Where(c => (c.LdapSource == null || c.LdapSource.IsActive) && c.Title.ToLower() == title.ToLower())
             .CountAsync();
     }
+
+    public async Task AddContactAsync(Contact contact)
+    {
+        _context.Contacts.Add(contact);
+        await _context.SaveChangesAsync();
+    }
 }

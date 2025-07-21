@@ -63,6 +63,21 @@ public static class DbInitializer
 				Company = "Example Corp",
 				DistinguishedName = "cn=Petr Petrov,ou=HR,dc=example,dc=com",
 				LastUpdated = DateTime.UtcNow
+			},
+			new Contact
+			{
+				FirstName = "Manual",
+				LastName = "Contact",
+				PhoneNumber = "+7 (999) 111-22-33",
+				Department = "ManualDept",
+				Email = "manual@example.com",
+				LdapSourceId = null,
+				DisplayName = "Manual Contact",
+				Division = "ManualDiv",
+				Title = "Ручной",
+				Company = "Example Corp",
+				DistinguishedName = "manual-contact",
+				LastUpdated = DateTime.UtcNow
 			}
 		};
 

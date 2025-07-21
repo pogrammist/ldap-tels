@@ -1,0 +1,45 @@
+@model Contact
+@{
+    ViewData["Title"] = "Удаление контакта";
+}
+
+<h1>Удаление контакта</h1>
+
+<div class="alert alert-danger mb-4">
+    <h4 class="alert-heading">Внимание!</h4>
+    <p>Вы уверены, что хотите удалить этот контакт? Это действие нельзя будет отменить.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Информация о контакте</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID:</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            <dt class="col-sm-3">ФИО:</dt>
+            <dd class="col-sm-9">@Model.DisplayName</dd>
+            <dt class="col-sm-3">Email:</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+            <dt class="col-sm-3">Телефон:</dt>
+            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+            <dt class="col-sm-3">Отдел:</dt>
+            <dd class="col-sm-9">@Model.Department</dd>
+            <dt class="col-sm-3">Подразделение:</dt>
+            <dd class="col-sm-9">@Model.Division</dd>
+            <dt class="col-sm-3">Должность:</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+            <dt class="col-sm-3">Компания:</dt>
+            <dd class="col-sm-9">@Model.Company</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="DeleteContact" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3">
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a asp-action="Contacts" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>

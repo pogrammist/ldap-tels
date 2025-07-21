@@ -98,13 +98,13 @@ public class LdapService
             var ldapContacts = await GetContactsFromLdapAsync(source);
             var ldapDns = ldapContacts.Select(c => c.DistinguishedName).ToHashSet();
 
-            // Получаем все контакты из базы для этого источника
+            // Получаем все контакты из базы для этого источника (только не ручные)
             var dbContacts = await _context.Contacts
                 .Where(c => c.LdapSourceId == source.Id)
                 .ToListAsync();
             var dbContactsByDn = dbContacts.ToDictionary(c => c.DistinguishedName, c => c);
 
-            // 1. Удаляем устаревшие контакты
+            // 1. Удаляем устаревшие контакты (только для этого источника)
             var toDelete = dbContacts.Where(c => !ldapDns.Contains(c.DistinguishedName)).ToList();
             if (toDelete.Count > 0)
             {
@@ -112,7 +112,7 @@ public class LdapService
                 _logger.LogInformation($"Удалено {toDelete.Count} устаревших контактов для источника {source.Name}");
             }
 
-            // 2. Обновляем существующие и добавляем новые
+            // 2. Обновляем существующие и добавляем новые (только для этого источника)
             foreach (var ldapContact in ldapContacts)
             {
                 if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName, out var dbContact))
@@ -134,6 +134,7 @@ public class LdapService
                 {
                     // Добавляем новый контакт
                     ldapContact.LastUpdated = DateTime.UtcNow;
+                    ldapContact.LdapSourceId = source.Id;
                     _context.Contacts.Add(ldapContact);
                 }
             }

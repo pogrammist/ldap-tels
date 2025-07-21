@@ -13,7 +13,7 @@ public class Contact
     public string Title { get; set; } = string.Empty;
     public string Company { get; set; } = string.Empty;
     public string DistinguishedName { get; set; } = string.Empty;
-    public int LdapSourceId { get; set; }
+    public int? LdapSourceId { get; set; }
     public LdapSource? LdapSource { get; set; }
     public DateTime LastUpdated { get; set; }
 }

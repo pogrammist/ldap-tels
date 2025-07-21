@@ -22,7 +22,8 @@ public class ApplicationDbContext : DbContext
             .HasOne(c => c.LdapSource)
             .WithMany()
             .HasForeignKey(c => c.LdapSourceId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
 
         // Индексы для ускорения поиска
         modelBuilder.Entity<Contact>()

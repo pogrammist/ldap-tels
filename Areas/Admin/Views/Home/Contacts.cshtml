@@ -16,7 +16,7 @@
             <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
             <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0">Очистить</button>
         </form>
-        <a asp-action="CreateContact" class="btn btn-primary">
+        <a href="/Admin/Home/CreateContact" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Добавить контакт
         </a>
     </div>
@@ -62,11 +62,12 @@ else
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Имя</th>
-                            <th>Email</th>
-                            <th>Телефон</th>
+                            <th>ФИО</th>
+                            <th>Подразделение</th>
                             <th>Отдел</th>
                             <th>Должность</th>
+                            <th>Телефон</th>
+                            <th>Email</th>
                             <th>Источник</th>
                             <th>Действия</th>
                         </tr>
@@ -77,22 +78,16 @@ else
                             <tr>
                                 <td>@contact.Id</td>
                                 <td>@contact.DisplayName</td>
+                                <td>@contact.Division</td>
+                                <td>@contact.Department</td>
+                                <td>@contact.Title</td>
+                                <td>@contact.PhoneNumber</td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(contact.Email))
                                     {
                                         <a href="mailto:@contact.Email">@contact.Email</a>
                                     }
                                 </td>
-                                <td>@contact.PhoneNumber</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(contact.Department))
-                                    {
-                                        <a asp-action="Department" asp-route-department="@contact.Department">
-                                            @contact.Department
-                                        </a>
-                                    }
-                                </td>
-                                <td>@contact.Title</td>
                                 <td>
                                     @if (contact.LdapSource != null)
                                     {
@@ -105,6 +100,15 @@ else
                                     <a asp-action="ContactDetails" asp-route-id="@contact.Id" class="btn btn-sm btn-info">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @if (contact.LdapSourceId == null)
+                                    {
+                                        <a asp-action="EditContact" asp-route-id="@contact.Id" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="DeleteContact" asp-route-id="@contact.Id" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }
