@@ -46,7 +46,6 @@ namespace ldap_tels.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("DistinguishedName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Division")
@@ -78,6 +77,9 @@ namespace ldap_tels.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ContactType")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

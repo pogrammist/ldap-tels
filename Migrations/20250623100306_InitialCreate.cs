@@ -48,9 +48,10 @@ namespace ldap_tels.Migrations
                     Division = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Company = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DistinguishedName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DistinguishedName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LdapSourceId = table.Column<int>(type: "int", nullable: true),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ContactType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
