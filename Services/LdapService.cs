@@ -126,15 +126,20 @@ public class LdapService
                     dbContact.Department = ldapContact.Department;
                     dbContact.Division = ldapContact.Division;
                     dbContact.Title = ldapContact.Title;
-                    dbContact.Company = ldapContact.Company;
+                    dbContact.Company = ldapContact.Company;                    
+                    dbContact.LdapSourceId = source.Id;
+                    dbContact.LdapSource = source;
+                    dbContact.ContactType = ContactType.Ldap;
                     dbContact.LastUpdated = DateTime.UtcNow;
                     _context.Contacts.Update(dbContact);
                 }
                 else
                 {
                     // Добавляем новый контакт
-                    ldapContact.LastUpdated = DateTime.UtcNow;
                     ldapContact.LdapSourceId = source.Id;
+                    ldapContact.LdapSource = source;
+                    ldapContact.ContactType = ContactType.Ldap;
+                    ldapContact.LastUpdated = DateTime.UtcNow;
                     _context.Contacts.Add(ldapContact);
                 }
             }
@@ -203,8 +208,10 @@ public class LdapService
             {
                 var contact = new Contact
                 {
-                    LdapSourceId = source.Id,
                     DistinguishedName = entry.DistinguishedName,
+                    LdapSourceId = source.Id,
+                    LdapSource = source,
+                    ContactType = ContactType.Ldap,
                     LastUpdated = DateTime.UtcNow
                 };
 
