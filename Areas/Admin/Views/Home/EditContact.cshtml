@@ -10,6 +10,8 @@
         <form asp-action="EditContact" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="LdapSourceId" />
+            <input type="hidden" asp-for="DistinguishedName" />
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -29,7 +31,7 @@
                     </div>
                     <div class="mb-3">
                         <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" />
+                        <input asp-for="Email" class="form-control" type="email" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
@@ -63,7 +65,7 @@
             </div>
             <div class="mb-3">
                 <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a asp-action="Contacts" class="btn btn-secondary">Отмена</a>
+                <a asp-action="ContactDetails" asp-route-id="@Model.Id" class="btn btn-secondary">Отмена</a>
             </div>
         </form>
     </div>

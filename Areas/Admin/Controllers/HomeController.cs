@@ -419,10 +419,95 @@ public class HomeController : Controller
     {
         if (ModelState.IsValid)
         {
-            contact.LdapSourceId = null;
             await _contactService.AddContactAsync(contact);
             return RedirectToAction("Contacts");
         }
         return View(contact);
+    }
+
+    public async Task<IActionResult> EditContact(int id)
+    {   
+        try
+        {
+            var contact = await _contactService.GetContactByIdAsync(id);
+            if (contact == null)
+            {
+                return NotFound();
+            }
+            return View(contact);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке данных контакта с ID {Id}", id);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить данные контакта с ID {id}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditContact(int id, Contact contact)
+    {
+        try
+        {
+            if (id != contact.Id)
+            {
+                return BadRequest();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var result = await _contactService.UpdateContactAsync(contact);
+                if (!result)
+                {
+                    return NotFound();
+                }
+                return RedirectToAction(nameof(Contacts));
+            }
+            return View(contact);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обновлении контакта с ID {Id}", id);
+            ModelState.AddModelError("", "Произошла ошибка при обновлении контакта. Пожалуйста, попробуйте позже.");
+            return View(contact);
+        }
+    }
+
+    public async Task<IActionResult> DeleteContact(int id)
+    {
+        try
+        {
+            var contact = await _contactService.GetContactByIdAsync(id);
+            if (contact == null)
+            {
+                return NotFound();
+            }
+            return View(contact);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке данных контакта с ID {Id}", id);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось загрузить данные контакта с ID {id}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    [HttpPost, ActionName("DeleteContact")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteContactConfirmed(int id)
+    {
+        try
+        {
+            var result = await _contactService.DeleteContactAsync(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+            return RedirectToAction(nameof(Contacts));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при удалении контакта с ID {Id}", id);
+            return View("Error", new ErrorViewModel { Message = $"Не удалось удалить контакт с ID {id}. Пожалуйста, попробуйте позже." });
+        }
     }
 }
