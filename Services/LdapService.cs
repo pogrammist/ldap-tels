@@ -95,7 +95,7 @@ public class LdapService
             _logger.LogInformation("Начало синхронизации с LDAP-сервером: {Name}", source.Name);
 
             // Получаем контакты из LDAP
-            var ldapContacts = await GetContactsFromLdapAsync(source);
+            var ldapContacts = GetContactsFromLdapAsync(source);
             var ldapDns = ldapContacts.Select(c => c.DistinguishedName).ToHashSet();
 
             // Получаем все контакты из базы для этого источника (только Ldap контакты)
@@ -104,7 +104,7 @@ public class LdapService
                 .ToListAsync();
             var dbContactsByDn = dbContacts
                 .Where(c => !string.IsNullOrEmpty(c.DistinguishedName))
-                .ToDictionary(c => c.DistinguishedName, c => c);
+                .ToDictionary(c => c.DistinguishedName!, c => c);
 
             // 1. Удаляем устаревшие контакты (только для этого источника)
             var toDelete = dbContacts.Where(c => !ldapDns.Contains(c.DistinguishedName)).ToList();
@@ -117,7 +117,7 @@ public class LdapService
             // 2. Обновляем существующие и добавляем новые (только для этого источника)
             foreach (var ldapContact in ldapContacts)
             {
-                if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName, out var dbContact))
+                if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName!, out var dbContact))
                 {
                     // Обновляем существующий контакт
                     dbContact.DisplayName = ldapContact.DisplayName;
@@ -161,7 +161,7 @@ public class LdapService
     }
 
     // Получение контактов из LDAP (только fetch, без работы с базой)
-    private async Task<List<Contact>> GetContactsFromLdapAsync(LdapSource source)
+    private List<Contact> GetContactsFromLdapAsync(LdapSource source)
     {
         var contacts = new List<Contact>();
 
