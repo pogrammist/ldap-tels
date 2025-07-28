@@ -20,7 +20,10 @@ public class ContactService
         return await _context.Contacts
             .Include(c => c.LdapSource)
             .Where(c => c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-            .OrderBy(c => c.DisplayName)
+            .OrderBy(c => c.Division)
+            .ThenBy(c => c.Department)
+            .ThenBy(c => c.Title)
+            .ThenBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -65,7 +68,9 @@ public class ContactService
                     c.Company.ToLower().Contains(searchTerm)
                 )
             )
-            .OrderBy(c => c.DisplayName)
+            .OrderBy(c => c.Division)
+            .ThenBy(c => c.Department)
+            .ThenBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -104,7 +109,8 @@ public class ContactService
             .Include(c => c.LdapSource)
             .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
                 && c.Division.ToLower() == division.ToLower())
-            .OrderBy(c => c.DisplayName)
+            .OrderBy(c => c.Department)
+            .ThenBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -135,7 +141,8 @@ public class ContactService
             .Include(c => c.LdapSource)
             .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
                 && c.Department.ToLower() == department.ToLower())
-            .OrderBy(c => c.DisplayName)
+            .OrderBy(c => c.Division)
+            .ThenBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -166,7 +173,9 @@ public class ContactService
             .Include(c => c.LdapSource)
             .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
                 && c.Title.ToLower() == title.ToLower())
-            .OrderBy(c => c.DisplayName)
+            .OrderBy(c => c.Division)
+            .ThenBy(c => c.Department)
+            .ThenBy(c => c.DisplayName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
