@@ -233,7 +233,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 10)
     {
         try
         {
@@ -272,7 +272,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> SearchContacts(string query, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> SearchContacts(string query, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -299,7 +299,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -335,7 +335,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -371,7 +371,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 10)
     {
         try
         {

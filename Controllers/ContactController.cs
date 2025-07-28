@@ -18,7 +18,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContacts([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContacts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -56,7 +56,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<Contact>>> SearchContacts([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<IEnumerable<Contact>>> SearchContacts([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -90,7 +90,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("division/{division}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDivision(string division, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDivision(string division, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -120,7 +120,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("department/{department}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDepartment(string department, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDepartment(string department, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -150,7 +150,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("title/{title}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByTitle(string title, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByTitle(string title, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {

@@ -15,7 +15,7 @@ public class ContactService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Contact>> GetAllContactsAsync(int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Contact>> GetAllContactsAsync(int page = 1, int pageSize = 10)
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
@@ -41,7 +41,7 @@ public class ContactService
             .FirstOrDefaultAsync(c => c.Id == id && (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive)));
     }
 
-    public async Task<IEnumerable<Contact>> SearchContactsAsync(string searchTerm, int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Contact>> SearchContactsAsync(string searchTerm, int page = 1, int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -98,7 +98,7 @@ public class ContactService
             .CountAsync();
     }
 
-    public async Task<IEnumerable<Contact>> GetContactsByDivisionAsync(string division, int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Contact>> GetContactsByDivisionAsync(string division, int page = 1, int pageSize = 10)
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
@@ -129,7 +129,7 @@ public class ContactService
             .CountAsync();
     }
 
-    public async Task<IEnumerable<Contact>> GetContactsByDepartmentAsync(string department, int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Contact>> GetContactsByDepartmentAsync(string department, int page = 1, int pageSize = 10)
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)
@@ -160,7 +160,7 @@ public class ContactService
             .CountAsync();
     }
 
-    public async Task<IEnumerable<Contact>> GetContactsByTitleAsync(string title, int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Contact>> GetContactsByTitleAsync(string title, int page = 1, int pageSize = 10)
     {
         return await _context.Contacts
             .Include(c => c.LdapSource)

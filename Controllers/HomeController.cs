@@ -15,20 +15,20 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
     {
         try
         {
-            var contacts = await _contactService.GetAllContactsAsync(1, 20);
+            var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
             var divisions = await _contactService.GetAllDivisionsAsync();
             var departments = await _contactService.GetAllDepartmentsAsync();
             var titles = await _contactService.GetAllTitlesAsync();
 
-            ViewBag.CurrentPage = 1;
-            ViewBag.PageSize = 20;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / 20.0);
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
             ViewBag.Divisions = divisions;
             ViewBag.Departments = departments;
             ViewBag.Titles = titles;
@@ -42,7 +42,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Search(string query, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Search(string query, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -109,7 +109,7 @@ public class HomeController : Controller
         };
     }
 
-    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 10)
     {
         try
         {
@@ -130,7 +130,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -166,7 +166,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 10)
     {
         try
         {
@@ -202,7 +202,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 10)
     {
         try
         {
