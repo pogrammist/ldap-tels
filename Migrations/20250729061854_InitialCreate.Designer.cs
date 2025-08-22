@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ldap_tels.Data;
 
@@ -11,9 +12,10 @@ using ldap_tels.Data;
 namespace ldap_tels.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250729061854_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -23,94 +25,71 @@ namespace ldap_tels.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("ldap_tels.Models.Company", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Weight")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Companies");
-                });
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+                b.Property<int>("Weight")
+                    .HasColumnType("int");
+                b.HasKey("Id");
+                b.ToTable("Companies");
+            });
 
             modelBuilder.Entity("ldap_tels.Models.Contact", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int?>("DivisionId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DepartmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TitleId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("DisplayName");
-
-                    b.HasIndex("DivisionId");
-
-                    b.HasIndex("Email");
-
-                    b.HasIndex("PhoneNumber");
-
-                    b.HasIndex("TitleId");
-
-                    b.ToTable("Contacts", (string)null);
-                });
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(450)");
+                b.Property<string>("Email")
+                    .HasColumnType("nvarchar(450)");
+                b.Property<string>("PhoneNumber")
+                    .HasColumnType("nvarchar(450)");
+                b.Property<int?>("DivisionId")
+                    .HasColumnType("int");
+                b.Property<int?>("DepartmentId")
+                    .HasColumnType("int");
+                b.Property<int?>("TitleId")
+                    .HasColumnType("int");
+                b.Property<int?>("CompanyId")
+                    .HasColumnType("int");
+                b.Property<DateTime>("LastUpdated")
+                    .HasColumnType("datetime2");
+                b.HasKey("Id");
+                b.HasIndex("CompanyId");
+                b.HasIndex("DepartmentId");
+                b.HasIndex("DisplayName");
+                b.HasIndex("DivisionId");
+                b.HasIndex("Email");
+                b.HasIndex("PhoneNumber");
+                b.HasIndex("TitleId");
+                b.ToTable("Contacts", (string)null);
+            });
 
             modelBuilder.Entity("ldap_tels.Models.ManualContact", b =>
-                {
-                    b.HasBaseType("ldap_tels.Models.Contact");
-                    b.ToTable("ManualContacts", (string)null);
-                });
+            {
+                b.HasBaseType("ldap_tels.Models.Contact");
+                b.ToTable("ManualContacts", (string)null);
+            });
 
             modelBuilder.Entity("ldap_tels.Models.LdapContact", b =>
-                {
-                    b.HasBaseType("ldap_tels.Models.Contact");
-                    b.Property<string>("DistinguishedName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-                    b.Property<int>("LdapSourceId")
-                        .HasColumnType("int");
-                    b.HasIndex("LdapSourceId");
-                    b.ToTable("LdapContacts", (string)null);
-                });
+            {
+                b.HasBaseType("ldap_tels.Models.Contact");
+                b.Property<string>("DistinguishedName")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+                b.Property<int>("LdapSourceId")
+                    .HasColumnType("int");
+                b.HasIndex("LdapSourceId");
+                b.ToTable("LdapContacts", (string)null);
+            });
 
             modelBuilder.Entity("ldap_tels.Models.Department", b =>
                 {
