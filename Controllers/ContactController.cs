@@ -1,5 +1,6 @@
 using ldap_tels.Models;
 using ldap_tels.Services;
+using ldap_tels.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ldap_tels.Controllers;
@@ -18,15 +19,13 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContacts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<IEnumerable<ContactViewModel>>> GetContacts([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {
             var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
-            
             Response.Headers.Append("X-Total-Count", totalCount.ToString());
-            
             return Ok(contacts);
         }
         catch (Exception ex)
@@ -37,7 +36,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Contact>> GetContactById(int id)
+    public async Task<ActionResult<ContactViewModel>> GetContactById(int id)
     {
         try
         {
@@ -56,15 +55,13 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<Contact>>> SearchContacts([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<IEnumerable<ContactViewModel>>> SearchContacts([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {
             var contacts = await _contactService.SearchContactsAsync(query, page, pageSize);
             var totalCount = await _contactService.GetSearchResultsCountAsync(query);
-            
             Response.Headers.Append("X-Total-Count", totalCount.ToString());
-            
             return Ok(contacts);
         }
         catch (Exception ex)
@@ -90,7 +87,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("division/{division}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDivision(string division, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<IEnumerable<ContactViewModel>>> GetContactsByDivision(string division, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {
@@ -120,7 +117,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("department/{department}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByDepartment(string department, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<IEnumerable<ContactViewModel>>> GetContactsByDepartment(string department, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {
@@ -150,7 +147,7 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet("title/{title}")]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetContactsByTitle(string title, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<IEnumerable<ContactViewModel>>> GetContactsByTitle(string title, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         try
         {

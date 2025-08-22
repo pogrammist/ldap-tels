@@ -1,4 +1,4 @@
-@model Contact
+@model ManualContact
 @{
     ViewData["Title"] = "Редактирование контакта";
 }
@@ -10,8 +10,6 @@
         <form asp-action="EditContact" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="LdapSourceId" />
-            <input type="hidden" asp-for="DistinguishedName" />
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -20,18 +18,8 @@
                         <span asp-validation-for="DisplayName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="FirstName" class="form-label">Имя</label>
-                        <input asp-for="FirstName" class="form-control" />
-                        <span asp-validation-for="FirstName" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="LastName" class="form-label">Фамилия</label>
-                        <input asp-for="LastName" class="form-control" />
-                        <span asp-validation-for="LastName" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
                         <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" type="email" />
+                        <input asp-for="Email" class="form-control" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
@@ -42,24 +30,52 @@
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label asp-for="Department" class="form-label">Отдел</label>
-                        <input asp-for="Department" class="form-control" />
-                        <span asp-validation-for="Department" class="text-danger"></span>
+                        <label class="form-label">Подразделение</label>
+                        <input type="text" name="DivisionName" class="form-control" list="divisionsList" 
+                            value="@(Model.Division?.Name ?? "")" />
+                        <datalist id="divisionsList">
+                            @foreach (var div in ViewBag.DivisionNames ?? new List<string>())
+                            {
+                                <option value="@div" data-id="@div">@div</option>
+                            }
+                        </datalist>
+                        @* <input type="hidden" name="DivisionId" value="@Model.DivisionId" /> *@
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Division" class="form-label">Подразделение</label>
-                        <input asp-for="Division" class="form-control" />
-                        <span asp-validation-for="Division" class="text-danger"></span>
+                        <label class="form-label">Отдел</label>
+                        <input type="text" name="DepartmentName" class="form-control" list="departmentsList" 
+                            value="@(Model.Department?.Name ?? "")" />
+                        <datalist id="departmentsList">
+                            @foreach (var dept in ViewBag.DepartmentNames ?? new List<string>())
+                            {
+                                <option value="@dept" data-id="@dept">@dept</option>
+                            }
+                        </datalist>
+                        @* <input type="hidden" name="DepartmentId" value="@Model.DepartmentId" /> *@
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Title" class="form-label">Должность</label>
-                        <input asp-for="Title" class="form-control" />
-                        <span asp-validation-for="Title" class="text-danger"></span>
+                        <label class="form-label">Должность</label>
+                        <input type="text" name="TitleName" class="form-control" list="titlesList" 
+                            value="@(Model.Title?.Name ?? "")" />
+                        <datalist id="titlesList">
+                            @foreach (var title in ViewBag.TitleNames ?? new List<string>())
+                            {
+                                <option value="@title" data-id="@title">@title</option>
+                            }
+                        </datalist>
+                        @* <input type="hidden" name="TitleId" value="@Model.TitleId" /> *@
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Company" class="form-label">Компания</label>
-                        <input asp-for="Company" class="form-control" />
-                        <span asp-validation-for="Company" class="text-danger"></span>
+                        <label class="form-label">Компания</label>
+                        <input type="text" name="CompanyName" class="form-control" list="companiesList" 
+                            value="@(Model.Company?.Name ?? "")" />
+                        <datalist id="companiesList">
+                            @foreach (var company in ViewBag.CompanyNames ?? new List<string>())
+                            {
+                                <option value="@company" data-id="@company">@company</option>
+                            }
+                        </datalist>
+                        @* <input type="hidden" name="CompanyId" value="@Model.CompanyId" /> *@
                     </div>
                 </div>
             </div>

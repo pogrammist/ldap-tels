@@ -1,4 +1,4 @@
-@model Contact
+@model ContactViewModel
 @{
     ViewData["Title"] = "Детали контакта";
 }
@@ -28,12 +28,6 @@
                     
                     <dt class="col-sm-4">Отображаемое имя:</dt>
                     <dd class="col-sm-8">@Model.DisplayName</dd>
-                    
-                    <dt class="col-sm-4">Имя:</dt>
-                    <dd class="col-sm-8">@Model.FirstName</dd>
-                    
-                    <dt class="col-sm-4">Фамилия:</dt>
-                    <dd class="col-sm-8">@Model.LastName</dd>
                     
                     <dt class="col-sm-4">Email:</dt>
                     <dd class="col-sm-8">

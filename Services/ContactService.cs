@@ -1,5 +1,6 @@
 using ldap_tels.Data;
 using ldap_tels.Models;
+using ldap_tels.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace ldap_tels.Services;
@@ -15,236 +16,606 @@ public class ContactService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Contact>> GetAllContactsAsync(int page = 1, int pageSize = 10)
-    {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-            .OrderBy(c => c.Division)
-            .ThenBy(c => c.Department)
-            .ThenBy(c => c.Title)
-            .ThenBy(c => c.DisplayName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-    }
-
     public async Task<int> GetTotalContactsCountAsync()
     {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-            .CountAsync();
+        var manualCount = await _context.ManualContacts.CountAsync();
+        var ldapCount = await _context.LdapContacts.CountAsync();
+        return manualCount + ldapCount;
     }
 
-    public async Task<Contact?> GetContactByIdAsync(int id)
+    public async Task<int> GetTotalDivisionsCountAsync()
     {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .FirstOrDefaultAsync(c => c.Id == id && (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive)));
+        return await _context.Divisions.CountAsync();
     }
 
-    public async Task<IEnumerable<Contact>> SearchContactsAsync(string searchTerm, int page = 1, int pageSize = 10)
+    public async Task<int> GetTotalDepartmentsCountAsync()
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return await GetAllContactsAsync(page, pageSize);
-        }
-
-        searchTerm = searchTerm.ToLower();
-
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && (
-                    c.DisplayName.ToLower().Contains(searchTerm) ||
-                    c.FirstName.ToLower().Contains(searchTerm) ||
-                    c.LastName.ToLower().Contains(searchTerm) ||
-                    c.Email.ToLower().Contains(searchTerm) ||
-                    c.PhoneNumber.Contains(searchTerm) ||
-                    c.Department.ToLower().Contains(searchTerm) ||
-                    c.Division.ToLower().Contains(searchTerm) ||
-                    c.Title.ToLower().Contains(searchTerm) ||
-                    c.Company.ToLower().Contains(searchTerm)
-                )
-            )
-            .OrderBy(c => c.Division)
-            .ThenBy(c => c.Department)
-            .ThenBy(c => c.DisplayName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        return await _context.Departments.CountAsync();
     }
 
-    public async Task<int> GetSearchResultsCountAsync(string searchTerm)
+    public async Task<int> GetTotalTitlesCountAsync()
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return await GetTotalContactsCountAsync();
-        }
-
-        searchTerm = searchTerm.ToLower();
-
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && (
-                    c.DisplayName.ToLower().Contains(searchTerm) ||
-                    c.FirstName.ToLower().Contains(searchTerm) ||
-                    c.LastName.ToLower().Contains(searchTerm) ||
-                    c.Email.ToLower().Contains(searchTerm) ||
-                    c.PhoneNumber.Contains(searchTerm) ||
-                    c.Department.ToLower().Contains(searchTerm) ||
-                    c.Division.ToLower().Contains(searchTerm) ||
-                    c.Title.ToLower().Contains(searchTerm) ||
-                    c.Company.ToLower().Contains(searchTerm)
-                )
-            )
-            .CountAsync();
+        return await _context.Titles.CountAsync();
     }
 
-    public async Task<IEnumerable<Contact>> GetContactsByDivisionAsync(string division, int page = 1, int pageSize = 10)
+    public async Task<int> GetTotalCompaniesCountAsync()
     {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Division.ToLower() == division.ToLower())
-            .OrderBy(c => c.Department)
-            .ThenBy(c => c.DisplayName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        return await _context.Companies.CountAsync();
     }
 
     public async Task<IEnumerable<string>> GetAllDivisionsAsync()
     {
-        return await _context.Contacts
-            .Where(c => !string.IsNullOrEmpty(c.Division))
-            .Select(c => c.Division)
+        return await _context.Divisions
+            .Select(c => c.Name)
             .Distinct()
             .OrderBy(d => d)
-            .ToListAsync();
-    }
-
-    public async Task<int> GetContactsByDivisionCountAsync(string division)
-    {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Division.ToLower() == division.ToLower())
-            .CountAsync();
-    }
-
-    public async Task<IEnumerable<Contact>> GetContactsByDepartmentAsync(string department, int page = 1, int pageSize = 10)
-    {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Department.ToLower() == department.ToLower())
-            .OrderBy(c => c.Division)
-            .ThenBy(c => c.DisplayName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<string>> GetAllDepartmentsAsync()
     {
-        return await _context.Contacts
-            .Where(c => !string.IsNullOrEmpty(c.Department))
-            .Select(c => c.Department)
+        return await _context.Departments
+            .Select(c => c.Name)
             .Distinct()
             .OrderBy(d => d)
             .ToListAsync();
     }
 
-    public async Task<int> GetContactsByDepartmentCountAsync(string department)
-    {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Department.ToLower() == department.ToLower())
-            .CountAsync();
-    }
-
-    public async Task<IEnumerable<Contact>> GetContactsByTitleAsync(string title, int page = 1, int pageSize = 10)
-    {
-        return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Title.ToLower() == title.ToLower())
-            .OrderBy(c => c.Division)
-            .ThenBy(c => c.Department)
-            .ThenBy(c => c.DisplayName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-    }
-
     public async Task<IEnumerable<string>> GetAllTitlesAsync()
     {
-        return await _context.Contacts
-            .Where(c => !string.IsNullOrEmpty(c.Title))
-            .Select(c => c.Title)
+        return await _context.Titles
+            .Select(c => c.Name)
             .Distinct()
             .OrderBy(t => t)
             .ToListAsync();
     }
 
-    public async Task<int> GetContactsByTitleCountAsync(string title)
+    public async Task<IEnumerable<string>> GetAllCompaniesAsync()
     {
         return await _context.Contacts
-            .Include(c => c.LdapSource)
-            .Where(c => (c.ContactType == ContactType.Manual || (c.ContactType == ContactType.Ldap && c.LdapSource != null && c.LdapSource.IsActive))
-                && c.Title.ToLower() == title.ToLower())
-            .CountAsync();
+            .Include(c => c.Company)
+            .Where(c => c.Company != null)
+            .Select(c => c.Company!.Name)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
     }
 
-    public async Task AddContactAsync(Contact contact)
+    public async Task<int?> ResolveOrCreateDivisionIdAsync(string? divisionName)
     {
-        if (contact.ContactType != ContactType.Manual)
-            throw new InvalidOperationException("Only manual contacts can be created through this service.");
+        if (string.IsNullOrWhiteSpace(divisionName)) return null;
+        var name = divisionName.Trim();
+        var existing = await _context.Divisions.FirstOrDefaultAsync(x => x.Name == name);
+        if (existing != null) return existing.Id;
+        var entity = new Division { Name = name };
+        _context.Divisions.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity.Id;
+    }
+
+    public async Task<int?> ResolveOrCreateDepartmentIdAsync(string? departmentName)
+    {
+        if (string.IsNullOrWhiteSpace(departmentName)) return null;
+        var name = departmentName.Trim();
+        var existing = await _context.Departments.FirstOrDefaultAsync(x => x.Name == name);
+        if (existing != null) return existing.Id;
+        var entity = new Department { Name = name };
+        _context.Departments.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity.Id;
+    }
+
+    public async Task<int?> ResolveOrCreateTitleIdAsync(string? titleName)
+    {
+        if (string.IsNullOrWhiteSpace(titleName)) return null;
+        var name = titleName.Trim();
+        var existing = await _context.Titles.FirstOrDefaultAsync(x => x.Name == name);
+        if (existing != null) return existing.Id;
+        var entity = new Title { Name = name };
+        _context.Titles.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity.Id;
+    }
+
+    public async Task<int?> ResolveOrCreateCompanyIdAsync(string? companyName)
+    {
+        if (string.IsNullOrWhiteSpace(companyName)) return null;
+        var name = companyName.Trim();
+        var existing = await _context.Companies.FirstOrDefaultAsync(x => x.Name == name);
+        if (existing != null) return existing.Id;
+        var entity = new Company { Name = name };
+        _context.Companies.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity.Id;
+    }
+
+    public async Task<IEnumerable<ContactViewModel>> GetAllContactsAsync(int page = 1, int pageSize = 50)
+    {
+        // Выполняем запросы отдельно
+        var manuals = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Manual,
+                DistinguishedName = null,
+                LdapSourceId = null,
+                LdapSource = null
+            })
+            .ToListAsync();
+
+        var ldaps = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = c.DistinguishedName,
+                LdapSourceId = c.LdapSourceId,
+                LdapSource = c.LdapSource
+            })
+            .ToListAsync();
+
+        // Объединяем и сортируем в памяти
+        var allContacts = manuals.Concat(ldaps)
+            .OrderBy(x => x.Division)
+            .ThenBy(x => x.Department)
+            .ThenBy(x => x.Title)
+            .ThenBy(x => x.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return allContacts;
+    }
+    public async Task<ManualContact?> GetManualContactByIdAsync(int id)
+    {
+        return await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<ContactViewModel?> GetContactByIdAsync(int id)
+    {
+        var manual = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        if (manual != null)
+        {
+            return new ContactViewModel
+            {
+                Id = manual.Id,
+                DisplayName = manual.DisplayName,
+                Email = manual.Email,
+                PhoneNumber = manual.PhoneNumber,
+                Division = manual.Division?.Name,
+                Department = manual.Department?.Name,
+                Title = manual.Title?.Name,
+                Company = manual.Company?.Name,
+                ContactType = ContactType.Manual
+            };
+        }
+        var ldap = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        if (ldap != null)
+        {
+            return new ContactViewModel
+            {
+                Id = ldap.Id,
+                DisplayName = ldap.DisplayName,
+                Email = ldap.Email,
+                PhoneNumber = ldap.PhoneNumber,
+                Division = ldap.Division?.Name,
+                Department = ldap.Department?.Name,
+                Title = ldap.Title?.Name,
+                Company = ldap.Company?.Name,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = ldap.DistinguishedName,
+                LdapSourceId = ldap.LdapSourceId,
+                LdapSource = ldap.LdapSource
+            };
+        }
+        return null;
+    }
+
+    public async Task<IEnumerable<ContactViewModel>> SearchContactsAsync(string searchTerm, int page = 1, int pageSize = 50)
+    {
+        searchTerm = searchTerm.ToLower();
+
+        // Выполняем запросы отдельно
+        var manuals = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Where(c =>
+                c.DisplayName.ToLower().Contains(searchTerm) ||
+                c.Email.ToLower().Contains(searchTerm) ||
+                c.PhoneNumber.Contains(searchTerm) ||
+                (c.Division != null && c.Division.Name.ToLower().Contains(searchTerm)) ||
+                (c.Department != null && c.Department.Name.ToLower().Contains(searchTerm)) ||
+                (c.Title != null && c.Title.Name.ToLower().Contains(searchTerm)) ||
+                (c.Company != null && c.Company.Name.ToLower().Contains(searchTerm))
+            )
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Manual,
+                DistinguishedName = null,
+                LdapSourceId = null,
+                LdapSource = null
+            })
+            .ToListAsync();
+
+        var ldaps = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .Where(c =>
+                    c.DisplayName.ToLower().Contains(searchTerm) ||
+                    c.Email.ToLower().Contains(searchTerm) ||
+                    c.PhoneNumber.Contains(searchTerm) ||
+                (c.Division != null && c.Division.Name.ToLower().Contains(searchTerm)) ||
+                (c.Department != null && c.Department.Name.ToLower().Contains(searchTerm)) ||
+                (c.Title != null && c.Title.Name.ToLower().Contains(searchTerm)) ||
+                (c.Company != null && c.Company.Name.ToLower().Contains(searchTerm))
+            )
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = c.DistinguishedName,
+                LdapSourceId = c.LdapSourceId,
+                LdapSource = c.LdapSource
+            })
+            .ToListAsync();
+
+        // Объединяем и сортируем в памяти
+        var allContacts = manuals.Concat(ldaps)
+            .OrderBy(x => x.Division)
+            .ThenBy(x => x.Department)
+            .ThenBy(x => x.Title)
+            .ThenBy(x => x.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return allContacts;
+    }
+
+    public async Task<int> GetSearchResultsCountAsync(string searchTerm)
+    {
+        searchTerm = searchTerm.ToLower();
+        var manualCount = await _context.ManualContacts
+            .Where(c =>
+                    c.DisplayName.ToLower().Contains(searchTerm) ||
+                    c.Email.ToLower().Contains(searchTerm) ||
+                    c.PhoneNumber.Contains(searchTerm) ||
+                (c.Division != null && c.Division.Name.ToLower().Contains(searchTerm)) ||
+                (c.Department != null && c.Department.Name.ToLower().Contains(searchTerm)) ||
+                (c.Title != null && c.Title.Name.ToLower().Contains(searchTerm)) ||
+                (c.Company != null && c.Company.Name.ToLower().Contains(searchTerm))
+            )
+            .CountAsync();
+        var ldapCount = await _context.LdapContacts
+            .Where(c =>
+                c.DisplayName.ToLower().Contains(searchTerm) ||
+                c.Email.ToLower().Contains(searchTerm) ||
+                c.PhoneNumber.Contains(searchTerm) ||
+                (c.Division != null && c.Division.Name.ToLower().Contains(searchTerm)) ||
+                (c.Department != null && c.Department.Name.ToLower().Contains(searchTerm)) ||
+                (c.Title != null && c.Title.Name.ToLower().Contains(searchTerm)) ||
+                (c.Company != null && c.Company.Name.ToLower().Contains(searchTerm))
+            )
+            .CountAsync();
+        return manualCount + ldapCount;
+    }
+
+    public async Task<IEnumerable<ContactViewModel>> GetContactsByDivisionAsync(string division, int page = 1, int pageSize = 50)
+    {
+        division = division.ToLower();
+        
+        // Выполняем запросы отдельно
+        var manuals = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Where(c => c.Division != null && c.Division.Name.ToLower() == division)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Manual,
+                DistinguishedName = null,
+                LdapSourceId = null,
+                LdapSource = null
+            })
+            .ToListAsync();
+
+        var ldaps = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .Where(c => c.Division != null && c.Division.Name.ToLower() == division)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = c.DistinguishedName,
+                LdapSourceId = c.LdapSourceId,
+                LdapSource = c.LdapSource
+            })
+            .ToListAsync();
+
+        // Объединяем и сортируем в памяти
+        var allContacts = manuals.Concat(ldaps)
+            .OrderBy(x => x.Department != null ? x.Department : "")
+            .ThenBy(x => x.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return allContacts;
+    }
+    public async Task<int> GetContactsByDivisionCountAsync(string division)
+    {
+        division = division.ToLower();
+        var manualCount = await _context.ManualContacts
+            .Where(c => c.Division != null && c.Division.Name.ToLower() == division)
+            .CountAsync();
+        var ldapCount = await _context.LdapContacts
+            .Where(c => c.Division != null && c.Division.Name.ToLower() == division)
+            .CountAsync();
+        return manualCount + ldapCount;
+    }
+
+    public async Task<IEnumerable<ContactViewModel>> GetContactsByDepartmentAsync(string department, int page = 1, int pageSize = 50)
+    {
+        department = department.ToLower();
+        
+        // Выполняем запросы отдельно
+        var manuals = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Where(c => c.Department != null && c.Department.Name.ToLower() == department)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Manual,
+                DistinguishedName = null,
+                LdapSourceId = null,
+                LdapSource = null
+            })
+            .ToListAsync();
+
+        var ldaps = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .Where(c => c.Department != null && c.Department.Name.ToLower() == department)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = c.DistinguishedName,
+                LdapSourceId = c.LdapSourceId,
+                LdapSource = c.LdapSource
+            })
+            .ToListAsync();
+
+        // Объединяем и сортируем в памяти
+        var allContacts = manuals.Concat(ldaps)
+            .OrderBy(x => x.Division != null ? x.Division : "")
+            .ThenBy(x => x.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return allContacts;
+    }
+
+    public async Task<int> GetContactsByDepartmentCountAsync(string department)
+    {
+        department = department.ToLower();
+        var manualCount = await _context.ManualContacts
+            .Where(c => c.Department != null && c.Department.Name.ToLower() == department)
+            .CountAsync();
+        var ldapCount = await _context.LdapContacts
+            .Where(c => c.Department != null && c.Department.Name.ToLower() == department)
+            .CountAsync();
+        return manualCount + ldapCount;
+    }
+
+    public async Task<IEnumerable<ContactViewModel>> GetContactsByTitleAsync(string title, int page = 1, int pageSize = 50)
+    {
+        title = title.ToLower();
+        
+        // Выполняем запросы отдельно
+        var manuals = await _context.ManualContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Where(c => c.Title != null && c.Title.Name.ToLower() == title)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Manual,
+                DistinguishedName = null,
+                LdapSourceId = null,
+                LdapSource = null
+            })
+            .ToListAsync();
+
+        var ldaps = await _context.LdapContacts
+            .Include(c => c.Division)
+            .Include(c => c.Department)
+            .Include(c => c.Title)
+            .Include(c => c.Company)
+            .Include(c => c.LdapSource)
+            .Where(c => c.Title != null && c.Title.Name.ToLower() == title)
+            .Select(c => new ContactViewModel
+            {
+                Id = c.Id,
+                DisplayName = c.DisplayName,
+                Email = c.Email,
+                PhoneNumber = c.PhoneNumber,
+                Division = c.Division != null ? c.Division.Name : null,
+                Department = c.Department != null ? c.Department.Name : null,
+                Title = c.Title != null ? c.Title.Name : null,
+                Company = c.Company != null ? c.Company.Name : null,
+                ContactType = ContactType.Ldap,
+                DistinguishedName = c.DistinguishedName,
+                LdapSourceId = c.LdapSourceId,
+                LdapSource = c.LdapSource
+            })
+            .ToListAsync();
+
+        // Объединяем и сортируем в памяти
+        var allContacts = manuals.Concat(ldaps)
+            .OrderBy(x => x.Division != null ? x.Division : "")
+            .ThenBy(x => x.Department != null ? x.Department : "")
+            .ThenBy(x => x.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return allContacts;
+    }
+
+    public async Task<int> GetContactsByTitleCountAsync(string title)
+    {
+        title = title.ToLower();
+        var manualCount = await _context.ManualContacts
+            .Where(c => c.Title != null && c.Title.Name.ToLower() == title)
+            .CountAsync();
+        var ldapCount = await _context.LdapContacts
+            .Where(c => c.Title != null && c.Title.Name.ToLower() == title)
+            .CountAsync();
+        return manualCount + ldapCount;
+    }
+
+    public async Task AddContactAsync(ManualContact contact)
+    {
         contact.LastUpdated = DateTime.UtcNow;
-        _context.Contacts.Add(contact);
+        _context.ManualContacts.Add(contact);
         await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> UpdateContactAsync(Contact contact)
+    public async Task<bool> UpdateContactAsync(ManualContact contact)
     {
         try
         {
-            var existingContact = await _context.Contacts.FindAsync(contact.Id);
+            var existingContact = await _context.ManualContacts.FindAsync(contact.Id);
             if (existingContact == null)
             {
                 return false;
             }
-            if (existingContact.ContactType != ContactType.Manual || contact.ContactType != ContactType.Manual)
-            {
-                // Only manual contacts can be updated
-                return false;
-            }
             // Обновляем только существующие в модели поля
             existingContact.DisplayName = contact.DisplayName;
-            existingContact.FirstName = contact.FirstName;
-            existingContact.LastName = contact.LastName;
             existingContact.Email = contact.Email;
             existingContact.PhoneNumber = contact.PhoneNumber;
-            existingContact.Division = contact.Division;
-            existingContact.Department = contact.Department;
-            existingContact.Title = contact.Title;
-            existingContact.Company = contact.Company;
-            existingContact.ContactType = contact.ContactType;
+            existingContact.DivisionId = contact.DivisionId;
+            existingContact.DepartmentId = contact.DepartmentId;
+            existingContact.TitleId = contact.TitleId;
+            existingContact.CompanyId = contact.CompanyId;
             existingContact.LastUpdated = DateTime.UtcNow;
-            existingContact.DistinguishedName = null;
-            existingContact.LdapSourceId = null;
-            existingContact.LdapSource = null;
             _context.Entry(existingContact).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return true;
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!await _context.Contacts.AnyAsync(e => e.Id == contact.Id))
+            if (!await _context.ManualContacts.AnyAsync(e => e.Id == contact.Id))
             {
                 return false;
             }
@@ -254,35 +625,114 @@ public class ContactService
 
     public async Task<bool> DeleteContactAsync(int id)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
         try
         {
-            var contact = await _context.Contacts.FindAsync(id);
+            var contact = await _context.ManualContacts
+                .Include(c => c.Division)
+                .Include(c => c.Department)
+                .Include(c => c.Title)
+                .Include(c => c.Company)
+                .FirstOrDefaultAsync(c => c.Id == id);
+                
             if (contact == null)
             {
                 return false;
             }
-            if (contact.ContactType != ContactType.Manual)
-            {
-                return false;
-            }
-            _context.Contacts.Remove(contact);
+
+            // Сохраняем ID связанных entities перед удалением контакта
+            var divisionId = contact.DivisionId;
+            var departmentId = contact.DepartmentId;
+            var titleId = contact.TitleId;
+            var companyId = contact.CompanyId;
+
+            // Удаляем контакт
+            _context.ManualContacts.Remove(contact);
             await _context.SaveChangesAsync();
+
+            // Проверяем и удаляем связанные entities если они больше не используются
+            await CleanupUnusedDivisionAsync(divisionId);
+            await CleanupUnusedDepartmentAsync(departmentId);
+            await CleanupUnusedTitleAsync(titleId);
+            await CleanupUnusedCompanyAsync(companyId);
+
+            await transaction.CommitAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             _logger.LogError(ex, "Ошибка при удалении контакта с ID {Id}", id);
             return false;
         }
     }
 
-    public async Task<IEnumerable<string>> GetAllCompaniesAsync()
+    private async Task CleanupUnusedDivisionAsync(int? divisionId)
     {
-        return await _context.Contacts
-            .Where(c => !string.IsNullOrEmpty(c.Company))
-            .Select(c => c.Company)
-            .Distinct()
-            .OrderBy(c => c)
-            .ToListAsync();
+        if (divisionId.HasValue)
+        {
+            var isUsed = await _context.Contacts.AnyAsync(c => c.DivisionId == divisionId);
+            if (!isUsed)
+            {
+                var division = await _context.Divisions.FindAsync(divisionId);
+                if (division != null)
+                {
+                    _context.Divisions.Remove(division);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+    }
+
+    private async Task CleanupUnusedDepartmentAsync(int? departmentId)
+    {
+        if (departmentId.HasValue)
+        {
+            var isUsed = await _context.Contacts.AnyAsync(c => c.DepartmentId == departmentId);
+            if (!isUsed)
+            {
+                var department = await _context.Departments.FindAsync(departmentId);
+                if (department != null)
+                {
+                    _context.Departments.Remove(department);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+    }
+
+    private async Task CleanupUnusedTitleAsync(int? titleId)
+    {
+        if (titleId.HasValue)
+        {
+            var isUsed = await _context.Contacts.AnyAsync(c => c.TitleId == titleId);
+            if (!isUsed)
+            {
+                var title = await _context.Titles.FindAsync(titleId);
+                if (title != null)
+                {
+                    _context.Titles.Remove(title);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+    }
+
+    private async Task CleanupUnusedCompanyAsync(int? companyId)
+    {
+        if (companyId.HasValue)
+        {
+            var isUsed = await _context.Contacts.AnyAsync(c => c.CompanyId == companyId);
+            if (!isUsed)
+            {
+                var company = await _context.Companies.FindAsync(companyId);
+                if (company != null)
+                {
+                    _context.Companies.Remove(company);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-@model IEnumerable<Contact>
+@model IEnumerable<ContactViewModel>
 @{
     ViewData["Title"] = "Контакты";
     var currentPage = ViewBag.CurrentPage ?? 1;
@@ -89,7 +89,7 @@ else
                                     }
                                 </td>
                                 <td>
-                                    @if (contact.LdapSource != null)
+                                    @if (contact.ContactType == ContactType.Ldap && contact.LdapSourceId != null && contact.LdapSource != null)
                                     {
                                         <a asp-action="LdapSourceDetails" asp-route-id="@contact.LdapSourceId">
                                             @contact.LdapSource.Name

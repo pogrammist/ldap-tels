@@ -1,5 +1,6 @@
 using ldap_tels.Models;
 using ldap_tels.Services;
+using ldap_tels.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ldap_tels.Controllers;
@@ -15,7 +16,7 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 50)
     {
         try
         {
@@ -42,7 +43,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Search(string query, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Search(string query, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -109,7 +110,7 @@ public class HomeController : Controller
         };
     }
 
-    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 50)
     {
         try
         {
@@ -130,7 +131,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -166,7 +167,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -202,7 +203,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 50)
     {
         try
         {

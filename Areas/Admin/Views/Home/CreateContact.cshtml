@@ -1,4 +1,4 @@
-@model Contact
+@model ManualContact
 @{
     ViewData["Title"] = "Добавление контакта";
 }
@@ -17,16 +17,6 @@
                         <span asp-validation-for="DisplayName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="FirstName" class="form-label">Имя</label>
-                        <input asp-for="FirstName" class="form-control" />
-                        <span asp-validation-for="FirstName" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="LastName" class="form-label">Фамилия</label>
-                        <input asp-for="LastName" class="form-control" />
-                        <span asp-validation-for="LastName" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
                         <label asp-for="Email" class="form-label">Email</label>
                         <input asp-for="Email" class="form-control" />
                         <span asp-validation-for="Email" class="text-danger"></span>
@@ -39,24 +29,44 @@
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label asp-for="Department" class="form-label">Отдел</label>
-                        <input asp-for="Department" class="form-control" />
-                        <span asp-validation-for="Department" class="text-danger"></span>
+                        <label class="form-label">Подразделение</label>
+                        <input name="DivisionName" class="form-control" list="divisionsList" />
+                        <datalist id="divisionsList">
+                            @foreach (var divisionName in ViewBag.DivisionNames ?? new List<string>())
+                            {
+                                <option value="@divisionName"></option>
+                            }
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Division" class="form-label">Подразделение</label>
-                        <input asp-for="Division" class="form-control" />
-                        <span asp-validation-for="Division" class="text-danger"></span>
+                        <label class="form-label">Отдел</label>
+                        <input name="DepartmentName" class="form-control" list="departmentsList" />
+                        <datalist id="departmentsList">
+                            @foreach (var departmentName in ViewBag.DepartmentNames ?? new List<string>())
+                            {
+                                <option value="@departmentName"></option>
+                            }
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Title" class="form-label">Должность</label>
-                        <input asp-for="Title" class="form-control" />
-                        <span asp-validation-for="Title" class="text-danger"></span>
+                        <label class="form-label">Должность</label>
+                        <input name="TitleName" class="form-control" list="titlesList" />
+                        <datalist id="titlesList">
+                            @foreach (var titleName in ViewBag.TitleNames ?? new List<string>())
+                            {
+                                <option value="@titleName"></option>
+                            }
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Company" class="form-label">Компания</label>
-                        <input asp-for="Company" class="form-control" />
-                        <span asp-validation-for="Company" class="text-danger"></span>
+                        <label class="form-label">Компания</label>
+                        <input name="CompanyName" class="form-control" list="companiesList" />
+                        <datalist id="companiesList">
+                            @foreach (var companyName in ViewBag.CompanyNames ?? new List<string>())
+                            {
+                                <option value="@companyName"></option>
+                            }
+                        </datalist>
                     </div>
                 </div>
             </div>

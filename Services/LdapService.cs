@@ -98,51 +98,110 @@ public class LdapService
             var ldapContacts = GetContactsFromLdapAsync(source);
             var ldapDns = ldapContacts.Select(c => c.DistinguishedName).ToHashSet();
 
-            // Получаем все контакты из базы для этого источника (только Ldap контакты)
-            var dbContacts = await _context.Contacts
+            // Получаем все LDAP-контакты из базы для этого источника
+            var dbContacts = await _context.LdapContacts
                 .Where(c => c.LdapSourceId == source.Id)
                 .ToListAsync();
             var dbContactsByDn = dbContacts
                 .Where(c => !string.IsNullOrEmpty(c.DistinguishedName))
-                .ToDictionary(c => c.DistinguishedName!, c => c);
+                .ToDictionary(c => c.DistinguishedName, c => c);
 
             // 1. Удаляем устаревшие контакты (только для этого источника)
             var toDelete = dbContacts.Where(c => !ldapDns.Contains(c.DistinguishedName)).ToList();
             if (toDelete.Count > 0)
             {
-                _context.Contacts.RemoveRange(toDelete);
+                _context.LdapContacts.RemoveRange(toDelete);
                 _logger.LogInformation($"Удалено {toDelete.Count} устаревших контактов для источника {source.Name}");
             }
 
             // 2. Обновляем существующие и добавляем новые (только для этого источника)
             foreach (var ldapContact in ldapContacts)
             {
-                if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName!, out var dbContact))
+                // Извлекаем строковые значения из навигационных свойств
+                string? divisionName = ldapContact.Division?.Name;
+                string? departmentName = ldapContact.Department?.Name;
+                string? titleName = ldapContact.Title?.Name;
+                string? companyName = ldapContact.Company?.Name;
+
+                // --- Division ---
+                Division? division = null;
+                if (!string.IsNullOrWhiteSpace(divisionName))
+                {
+                    division = await _context.Divisions.FirstOrDefaultAsync(d => d.Name == divisionName);
+                    if (division == null)
+                    {
+                        division = new Division { Name = divisionName };
+                        _context.Divisions.Add(division);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // --- Department ---
+                Department? department = null;
+                if (!string.IsNullOrWhiteSpace(departmentName))
+                {
+                    department = await _context.Departments.FirstOrDefaultAsync(d => d.Name == departmentName);
+                    if (department == null)
+                    {
+                        department = new Department { Name = departmentName };
+                        _context.Departments.Add(department);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // --- Title ---
+                Title? title = null;
+                if (!string.IsNullOrWhiteSpace(titleName))
+                {
+                    title = await _context.Titles.FirstOrDefaultAsync(t => t.Name == titleName);
+                    if (title == null)
+                    {
+                        title = new Title { Name = titleName };
+                        _context.Titles.Add(title);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // --- Company ---
+                Company? company = null;
+                if (!string.IsNullOrWhiteSpace(companyName))
+                {
+                    company = await _context.Companies.FirstOrDefaultAsync(c => c.Name == companyName);
+                    if (company == null)
+                    {
+                        company = new Company { Name = companyName };
+                        _context.Companies.Add(company);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName, out var dbContact))
                 {
                     // Обновляем существующий контакт
                     dbContact.DisplayName = ldapContact.DisplayName;
-                    dbContact.FirstName = ldapContact.FirstName;
-                    dbContact.LastName = ldapContact.LastName;
                     dbContact.Email = ldapContact.Email;
                     dbContact.PhoneNumber = ldapContact.PhoneNumber;
-                    dbContact.Department = ldapContact.Department;
-                    dbContact.Division = ldapContact.Division;
-                    dbContact.Title = ldapContact.Title;
-                    dbContact.Company = ldapContact.Company;                    
+                    dbContact.DivisionId = division?.Id;
+                    dbContact.DepartmentId = department?.Id;
+                    dbContact.TitleId = title?.Id;
+                    dbContact.CompanyId = company?.Id;
                     dbContact.LdapSourceId = source.Id;
                     dbContact.LdapSource = source;
-                    dbContact.ContactType = ContactType.Ldap;
+                    dbContact.DistinguishedName = ldapContact.DistinguishedName;
                     dbContact.LastUpdated = DateTime.UtcNow;
-                    _context.Contacts.Update(dbContact);
+                    _context.LdapContacts.Update(dbContact);
                 }
                 else
                 {
                     // Добавляем новый контакт
+                    ldapContact.DivisionId = division?.Id;
+                    ldapContact.DepartmentId = department?.Id;
+                    ldapContact.TitleId = title?.Id;
+                    ldapContact.CompanyId = company?.Id;
                     ldapContact.LdapSourceId = source.Id;
                     ldapContact.LdapSource = source;
-                    ldapContact.ContactType = ContactType.Ldap;
                     ldapContact.LastUpdated = DateTime.UtcNow;
-                    _context.Contacts.Add(ldapContact);
+                    _context.LdapContacts.Add(ldapContact);
                 }
             }
 
@@ -161,9 +220,9 @@ public class LdapService
     }
 
     // Получение контактов из LDAP (только fetch, без работы с базой)
-    private List<Contact> GetContactsFromLdapAsync(LdapSource source)
+    private List<LdapContact> GetContactsFromLdapAsync(LdapSource source)
     {
-        var contacts = new List<Contact>();
+        var contacts = new List<LdapContact>();
 
         // Создаем идентификатор сервера LDAP
         var ldapIdentifier = new LdapDirectoryIdentifier(source.Server, source.Port, false, false);
@@ -198,8 +257,7 @@ public class LdapService
                 source.BaseDn,
                 source.SearchFilter,
                 System.DirectoryServices.Protocols.SearchScope.Subtree,
-                "cn", "sn", "givenName", "mail", "telephoneNumber", "Description",
-                "department", "title", "company", "displayName"
+                "cn", "displayName", "mail", "telephoneNumber", "description", "department", "title", "company"
             );
 
             // Выполняем поиск
@@ -208,29 +266,26 @@ public class LdapService
             // Обрабатываем результаты
             foreach (SearchResultEntry entry in searchResponse.Entries)
             {
-                var contact = new Contact
+                var contact = new LdapContact
                 {
                     DistinguishedName = entry.DistinguishedName,
                     LdapSourceId = source.Id,
                     LdapSource = source,
-                    ContactType = ContactType.Ldap,
                     LastUpdated = DateTime.UtcNow
                 };
 
                 // Заполнение полей контакта из атрибутов LDAP
                 if (entry.Attributes.Contains("displayName"))
                 {
-                    contact.DisplayName = entry.Attributes["displayName"][0] as string ?? string.Empty;
-                }
-
-                if (entry.Attributes.Contains("givenName"))
-                {
-                    contact.FirstName = entry.Attributes["givenName"][0] as string ?? string.Empty;
-                }
-
-                if (entry.Attributes.Contains("sn"))
-                {
-                    contact.LastName = entry.Attributes["sn"][0] as string ?? string.Empty;
+                    var displayName = entry.Attributes["displayName"][0] as string ?? string.Empty;
+                    if (string.IsNullOrEmpty(displayName))
+                    {
+                        if (entry.Attributes.Contains("cn"))
+                        {
+                            displayName = entry.Attributes["cn"][0] as string ?? string.Empty;
+                        }
+                    }
+                    contact.DisplayName = displayName;
                 }
 
                 if (entry.Attributes.Contains("mail"))
@@ -243,31 +298,40 @@ public class LdapService
                     contact.PhoneNumber = entry.Attributes["telephoneNumber"][0] as string ?? string.Empty;
                 }
 
-                if (entry.Attributes.Contains("department"))
+                if (entry.Attributes.Contains("description"))
                 {
-                    contact.Department = entry.Attributes["department"][0] as string ?? string.Empty;
+                    var divisionName = entry.Attributes["description"][0] as string ?? string.Empty;
+                    if (!string.IsNullOrEmpty(divisionName))
+                    {
+                        contact.Division = new Division { Name = divisionName };
+                    }
                 }
 
-                if (entry.Attributes.Contains("Description"))
+                if (entry.Attributes.Contains("department"))
                 {
-                    contact.Division = entry.Attributes["Description"][0] as string ?? string.Empty;
+                    var departmentName = entry.Attributes["department"][0] as string ?? string.Empty;
+                    if (!string.IsNullOrEmpty(departmentName))
+                    {
+                        contact.Department = new Department { Name = departmentName };
+                    }
                 }
 
                 if (entry.Attributes.Contains("title"))
                 {
-                    contact.Title = entry.Attributes["title"][0] as string ?? string.Empty;
+                    var titleName = entry.Attributes["title"][0] as string ?? string.Empty;
+                    if (!string.IsNullOrEmpty(titleName))
+                    {
+                        contact.Title = new Title { Name = titleName };
+                    }
                 }
 
                 if (entry.Attributes.Contains("company"))
                 {
-                    contact.Company = entry.Attributes["company"][0] as string ?? string.Empty;
-                }
-
-                // Если DisplayName пустой, создаем его из имени и фамилии
-                if (string.IsNullOrEmpty(contact.DisplayName) &&
-                    (!string.IsNullOrEmpty(contact.FirstName) || !string.IsNullOrEmpty(contact.LastName)))
-                {
-                    contact.DisplayName = $"{contact.FirstName} {contact.LastName}".Trim();
+                    var companyName = entry.Attributes["company"][0] as string ?? string.Empty;
+                    if (!string.IsNullOrEmpty(companyName))
+                    {
+                        contact.Company = new Company { Name = companyName };
+                    }
                 }
 
                 contacts.Add(contact);

@@ -2,8 +2,6 @@ using ldap_tels.Models;
 using ldap_tels.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
 
 namespace ldap_tels.Areas.Admin.Controllers;
 
@@ -31,14 +29,14 @@ public class HomeController : Controller
         {
             var sources = await _ldapService.GetAllSourcesAsync();
             var totalContacts = await _contactService.GetTotalContactsCountAsync();
-            var divisions = await _contactService.GetAllDivisionsAsync();
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            var titles = await _contactService.GetAllTitlesAsync();
+            var totalDivisions = await _contactService.GetTotalDivisionsCountAsync();
+            var totalDepartments = await _contactService.GetTotalDepartmentsCountAsync();
+            var totalTitles = await _contactService.GetTotalTitlesCountAsync();
 
             ViewBag.TotalContacts = totalContacts;
-            ViewBag.TotalDivisions = divisions.Count();
-            ViewBag.TotalDepartments = departments.Count();
-            ViewBag.TotalTitles = titles.Count();
+            ViewBag.TotalDivisions = totalDivisions;
+            ViewBag.TotalDepartments = totalDepartments;
+            ViewBag.TotalTitles = totalTitles;
 
             return View(sources);
         }
@@ -233,7 +231,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Contacts(int page = 1, int pageSize = 50)
     {
         try
         {
@@ -272,7 +270,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> SearchContacts(string query, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> SearchContacts(string query, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -299,7 +297,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Division(string division, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -335,7 +333,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Department(string department, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -371,7 +369,7 @@ public class HomeController : Controller
         }
     }
 
-    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Title(string title, int page = 1, int pageSize = 50)
     {
         try
         {
@@ -408,20 +406,45 @@ public class HomeController : Controller
     }
 
     [HttpGet]
-    public IActionResult CreateContact()
+    public async Task<IActionResult> CreateContact()
     {
-        return View();
+        // Загружаем данные для выпадающих списков
+        ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
+        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
+        ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
+        ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+        
+        return View(new ManualContact());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateContact(Contact contact)
+    public async Task<IActionResult> CreateContact(ManualContact contact)
     {
+        // Единое поле с datalist: получаем введенные названия
+        var divisionName = (Request.Form["DivisionName"].ToString() ?? string.Empty).Trim();
+        var departmentName = (Request.Form["DepartmentName"].ToString() ?? string.Empty).Trim();
+        var titleName = (Request.Form["TitleName"].ToString() ?? string.Empty).Trim();
+        var companyName = (Request.Form["CompanyName"].ToString() ?? string.Empty).Trim();
+
+        // Разрешаем Id через сервис (создаст новые записи при необходимости)
+        contact.DivisionId = await _contactService.ResolveOrCreateDivisionIdAsync(divisionName);
+        contact.DepartmentId = await _contactService.ResolveOrCreateDepartmentIdAsync(departmentName);
+        contact.TitleId = await _contactService.ResolveOrCreateTitleIdAsync(titleName);
+        contact.CompanyId = await _contactService.ResolveOrCreateCompanyIdAsync(companyName);
+
         if (ModelState.IsValid)
         {
             await _contactService.AddContactAsync(contact);
-            return RedirectToAction("Contacts");
+            return RedirectToAction(nameof(Contacts));
         }
+        
+        // Если модель невалидна, загружаем данные для выпадающих списков
+        ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
+        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
+        ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
+        ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+        
         return View(contact);
     }
 
@@ -429,11 +452,18 @@ public class HomeController : Controller
     {   
         try
         {
-            var contact = await _contactService.GetContactByIdAsync(id);
+            var contact = await _contactService.GetManualContactByIdAsync(id);
             if (contact == null)
             {
                 return NotFound();
             }
+            
+            // Загружаем данные для выпадающих списков
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            
             return View(contact);
         }
         catch (Exception ex)
@@ -445,7 +475,7 @@ public class HomeController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditContact(int id, Contact contact)
+    public async Task<IActionResult> EditContact(int id, ManualContact contact)
     {
         try
         {
@@ -453,6 +483,18 @@ public class HomeController : Controller
             {
                 return BadRequest();
             }
+
+            // Единое поле с datalist: получаем введенные названия
+            var divisionName = (Request.Form["DivisionName"].ToString() ?? string.Empty).Trim();
+            var departmentName = (Request.Form["DepartmentName"].ToString() ?? string.Empty).Trim();
+            var titleName = (Request.Form["TitleName"].ToString() ?? string.Empty).Trim();
+            var companyName = (Request.Form["CompanyName"].ToString() ?? string.Empty).Trim();
+
+            // Разрешаем Id через сервис (создаст новые записи при необходимости)
+            contact.DivisionId = await _contactService.ResolveOrCreateDivisionIdAsync(divisionName);
+            contact.DepartmentId = await _contactService.ResolveOrCreateDepartmentIdAsync(departmentName);
+            contact.TitleId = await _contactService.ResolveOrCreateTitleIdAsync(titleName);
+            contact.CompanyId = await _contactService.ResolveOrCreateCompanyIdAsync(companyName);
 
             if (ModelState.IsValid)
             {
@@ -463,12 +505,26 @@ public class HomeController : Controller
                 }
                 return RedirectToAction(nameof(Contacts));
             }
+            
+            // Если модель невалидна, загружаем данные для выпадающих списков
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            
             return View(contact);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при обновлении контакта с ID {Id}", id);
             ModelState.AddModelError("", "Произошла ошибка при обновлении контакта. Пожалуйста, попробуйте позже.");
+            
+            // Загружаем данные для выпадающих списков
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            
             return View(contact);
         }
     }
