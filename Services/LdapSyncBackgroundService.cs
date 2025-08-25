@@ -70,7 +70,7 @@ public class LdapSyncBackgroundService : BackgroundService
         
         // Создаем новый scope для получения сервисов
         using var scope = _serviceProvider.CreateScope();
-        var ldapService = scope.ServiceProvider.GetRequiredService<LdapService>();
+        var ldapService = scope.ServiceProvider.GetRequiredService<ILdapService>();
         
         await ldapService.SyncAllSourcesAsync();
         

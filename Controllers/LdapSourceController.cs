@@ -8,10 +8,10 @@ namespace ldap_tels.Controllers;
 [Route("api/[controller]")]
 public class LdapSourceController : ControllerBase
 {
-    private readonly LdapService _ldapService;
+    private readonly ILdapService _ldapService;
     private readonly ILogger<LdapSourceController> _logger;
 
-    public LdapSourceController(LdapService ldapService, ILogger<LdapSourceController> logger)
+    public LdapSourceController(ILdapService ldapService, ILogger<LdapSourceController> logger)
     {
         _ldapService = ldapService;
         _logger = logger;

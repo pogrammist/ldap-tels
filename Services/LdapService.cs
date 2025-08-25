@@ -6,7 +6,7 @@ using System.Net;
 
 namespace ldap_tels.Services;
 
-public class LdapService
+public class LdapService : ILdapService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<LdapService> _logger;
@@ -95,7 +95,7 @@ public class LdapService
             _logger.LogInformation("Начало синхронизации с LDAP-сервером: {Name}", source.Name);
 
             // Получаем контакты из LDAP
-            var ldapContacts = GetContactsFromLdapAsync(source);
+            var ldapContacts = GetContactsFromLdap(source);
             var ldapDns = ldapContacts.Select(c => c.DistinguishedName).ToHashSet();
 
             // Получаем все LDAP-контакты из базы для этого источника
@@ -220,7 +220,8 @@ public class LdapService
     }
 
     // Получение контактов из LDAP (только fetch, без работы с базой)
-    private List<LdapContact> GetContactsFromLdapAsync(LdapSource source)
+    // Оставляем virtual для подмены в тестах без внедрения отдельного фетчера
+    protected virtual List<LdapContact> GetContactsFromLdap(LdapSource source)
     {
         var contacts = new List<LdapContact>();
 

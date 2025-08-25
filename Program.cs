@@ -56,7 +56,7 @@ else
     builder.Services.AddScoped<ILdapAuthService, LdapAuthService>();
 }
 
-builder.Services.AddScoped<LdapService>();
+builder.Services.AddScoped<ILdapService, LdapService>();
 builder.Services.AddScoped<ContactService>();
 builder.Services.AddHostedService<LdapSyncBackgroundService>();
 

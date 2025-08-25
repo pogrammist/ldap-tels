@@ -9,12 +9,12 @@ namespace ldap_tels.Areas.Admin.Controllers;
 [Authorize(Roles = "Administrator")]
 public class HomeController : Controller
 {
-    private readonly LdapService _ldapService;
+    private readonly ILdapService _ldapService;
     private readonly ContactService _contactService;
     private readonly ILogger<HomeController> _logger;
 
     public HomeController(
-        LdapService ldapService,
+        ILdapService ldapService,
         ContactService contactService,
         ILogger<HomeController> logger)
     {
