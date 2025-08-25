@@ -1,0 +1,31 @@
+@model IEnumerable<ContactViewModel>
+@foreach (var contact in Model)
+{
+    <tr>
+        <td>@contact.DisplayName</td>
+        <td>
+            <a asp-action="Division" asp-route-division="@contact.Division">
+                @contact.Division
+            </a>
+        </td>
+        <td>
+            <a asp-action="Department" asp-route-department="@contact.Department">
+                @contact.Department
+            </a>
+        </td>
+        <td>
+            <a asp-action="Title" asp-route-title="@contact.Title">
+                @contact.Title
+            </a>
+        </td>
+        <td>@contact.PhoneNumber</td>
+        <td>
+            @if (!string.IsNullOrEmpty(contact.Email))
+            {
+                <a href="mailto:@contact.Email">@contact.Email</a>
+            }
+        </td>
+    </tr>
+}
+
+

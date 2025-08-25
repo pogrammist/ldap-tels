@@ -1,4 +1,5 @@
 using ldap_tels.Models;
+using ldap_tels.Extensions;
 using ldap_tels.Services;
 using ldap_tels.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -20,13 +21,14 @@ public class HomeController : Controller
     {
         try
         {
-            var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
+            // Для бесконечной прокрутки загружаем первую страницу при первоначальной загрузке
+            var contacts = await _contactService.GetAllContactsAsync(1, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
             var divisions = await _contactService.GetAllDivisionsAsync();
             var departments = await _contactService.GetAllDepartmentsAsync();
             var titles = await _contactService.GetAllTitlesAsync();
 
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -110,14 +112,66 @@ public class HomeController : Controller
         };
     }
 
+    [HttpGet("api/contacts")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    public async Task<IActionResult> GetContactsApi(int page = 1, int pageSize = 50, string? department = null, string? division = null, string? title = null)
+    {
+        try
+        {
+            IEnumerable<ContactViewModel> contacts;
+            int totalCount;
+
+            if (!string.IsNullOrEmpty(department))
+            {
+                contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
+                totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
+            }
+            else if (!string.IsNullOrEmpty(division))
+            {
+                contacts = await _contactService.GetContactsByDivisionAsync(division, page, pageSize);
+                totalCount = await _contactService.GetContactsByDivisionCountAsync(division);
+            }
+            else if (!string.IsNullOrEmpty(title))
+            {
+                contacts = await _contactService.GetContactsByTitleAsync(title, page, pageSize);
+                totalCount = await _contactService.GetContactsByTitleCountAsync(title);
+            }
+            else
+            {
+                contacts = await _contactService.GetAllContactsAsync(page, pageSize);
+                totalCount = await _contactService.GetTotalContactsCountAsync();
+            }
+
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Возвращаем HTML строк таблицы, чтобы совпадал рендер с серверной разметкой
+            var rowsHtml = await this.RenderViewAsync("_ContactRowsPartial", contacts, true);
+
+            return Json(new
+            {
+                rows = rowsHtml,
+                currentPage = page,
+                totalPages = totalPages,
+                totalCount = totalCount,
+                hasMore = page < totalPages
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при загрузке контактов через API");
+            return StatusCode(500, new { error = "Не удалось загрузить контакты" });
+        }
+    }
+
     public async Task<IActionResult> Contacts(int page = 1, int pageSize = 50)
     {
         try
         {
-            var contacts = await _contactService.GetAllContactsAsync(page, pageSize);
+            // Для бесконечной прокрутки всегда загружаем только первую страницу при первоначальной загрузке
+            var contacts = await _contactService.GetAllContactsAsync(1, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
 
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -135,10 +189,11 @@ public class HomeController : Controller
     {
         try
         {
-            var contacts = await _contactService.GetContactsByDivisionAsync(division, page, pageSize);
+            // Для бесконечной прокрутки всегда загружаем только первую страницу при первоначальной загрузке
+            var contacts = await _contactService.GetContactsByDivisionAsync(division, 1, pageSize);
             var totalCount = await _contactService.GetContactsByDivisionCountAsync(division);
 
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -171,10 +226,11 @@ public class HomeController : Controller
     {
         try
         {
-            var contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
+            // Для бесконечной прокрутки всегда загружаем только первую страницу при первоначальной загрузке
+            var contacts = await _contactService.GetContactsByDepartmentAsync(department, 1, pageSize);
             var totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
 
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -207,10 +263,11 @@ public class HomeController : Controller
     {
         try
         {
-            var contacts = await _contactService.GetContactsByTitleAsync(title, page, pageSize);
+            // Для бесконечной прокрутки всегда загружаем только первую страницу при первоначальной загрузке
+            var contacts = await _contactService.GetContactsByTitleAsync(title, 1, pageSize);
             var totalCount = await _contactService.GetContactsByTitleCountAsync(title);
 
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
