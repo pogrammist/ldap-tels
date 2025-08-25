@@ -24,17 +24,17 @@ public class HomeController : Controller
             // Для бесконечной прокрутки загружаем первую страницу при первоначальной загрузке
             var contacts = await _contactService.GetAllContactsAsync(1, pageSize);
             var totalCount = await _contactService.GetTotalContactsCountAsync();
-            var divisions = await _contactService.GetAllDivisionsAsync();
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            var titles = await _contactService.GetAllTitlesAsync();
+            var divisionNames = await _contactService.GetAllDivisionNamesAsync();
+            var departmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            var titleNames = await _contactService.GetAllTitleNamesAsync();
 
             ViewBag.CurrentPage = 1;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalCount = totalCount;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-            ViewBag.Divisions = divisions;
-            ViewBag.Departments = departments;
-            ViewBag.Titles = titles;
+            ViewBag.Divisions = divisionNames;
+            ViewBag.Departments = departmentNames;
+            ViewBag.Titles = titleNames;
 
             return View(contacts);
         }
@@ -212,8 +212,8 @@ public class HomeController : Controller
     {
         try
         {
-            var divisions = await _contactService.GetAllDivisionsAsync();
-            return View(divisions);
+            var divisionNames = await _contactService.GetAllDivisionNamesAsync();
+            return View(divisionNames);
         }
         catch (Exception ex)
         {
@@ -249,8 +249,8 @@ public class HomeController : Controller
     {
         try
         {
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            return View(departments);
+            var departmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            return View(departmentNames);
         }
         catch (Exception ex)
         {
@@ -286,8 +286,8 @@ public class HomeController : Controller
     {
         try
         {
-            var titles = await _contactService.GetAllTitlesAsync();
-            return View(titles);
+            var titleNames = await _contactService.GetAllTitleNamesAsync();
+            return View(titleNames);
         }
         catch (Exception ex)
         {

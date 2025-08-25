@@ -43,7 +43,7 @@ public class ContactService
         return await _context.Companies.CountAsync();
     }
 
-    public async Task<IEnumerable<string>> GetAllDivisionsAsync()
+    public async Task<IEnumerable<string>> GetAllDivisionNamesAsync()
     {
         return await _context.Divisions
             .Select(c => c.Name)
@@ -52,7 +52,7 @@ public class ContactService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<string>> GetAllDepartmentsAsync()
+    public async Task<IEnumerable<string>> GetAllDepartmentNamesAsync()
     {
         return await _context.Departments
             .Select(c => c.Name)
@@ -61,7 +61,7 @@ public class ContactService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<string>> GetAllTitlesAsync()
+    public async Task<IEnumerable<string>> GetAllTitleNamesAsync()
     {
         return await _context.Titles
             .Select(c => c.Name)
@@ -70,7 +70,7 @@ public class ContactService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<string>> GetAllCompaniesAsync()
+    public async Task<IEnumerable<string>> GetAllCompanyNamesAsync()
     {
         return await _context.Contacts
             .Include(c => c.Company)

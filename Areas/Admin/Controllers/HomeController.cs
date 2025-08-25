@@ -323,8 +323,8 @@ public class HomeController : Controller
     {
         try
         {
-            var divisions = await _contactService.GetAllDivisionsAsync();
-            return View(divisions);
+            var divisionNames = await _contactService.GetAllDivisionNamesAsync();
+            return View(divisionNames);
         }
         catch (Exception ex)
         {
@@ -359,8 +359,8 @@ public class HomeController : Controller
     {
         try
         {
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            return View(departments);
+            var departmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            return View(departmentNames);
         }
         catch (Exception ex)
         {
@@ -395,8 +395,8 @@ public class HomeController : Controller
     {
         try
         {
-            var titles = await _contactService.GetAllTitlesAsync();
-            return View(titles);
+            var titleNames = await _contactService.GetAllTitleNamesAsync();
+            return View(titleNames);
         }
         catch (Exception ex)
         {
@@ -409,10 +409,10 @@ public class HomeController : Controller
     public async Task<IActionResult> CreateContact()
     {
         // Загружаем данные для выпадающих списков
-        ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
-        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
-        ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
-        ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+        ViewBag.DivisionNames = await _contactService.GetAllDivisionNamesAsync();
+        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentNamesAsync();
+        ViewBag.TitleNames = await _contactService.GetAllTitleNamesAsync();
+        ViewBag.CompanyNames = await _contactService.GetAllCompanyNamesAsync();
         
         return View(new ManualContact());
     }
@@ -440,10 +440,10 @@ public class HomeController : Controller
         }
         
         // Если модель невалидна, загружаем данные для выпадающих списков
-        ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
-        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
-        ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
-        ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+        ViewBag.DivisionNames = await _contactService.GetAllDivisionNamesAsync();
+        ViewBag.DepartmentNames = await _contactService.GetAllDepartmentNamesAsync();
+        ViewBag.TitleNames = await _contactService.GetAllTitleNamesAsync();
+        ViewBag.CompanyNames = await _contactService.GetAllCompanyNamesAsync();
         
         return View(contact);
     }
@@ -459,10 +459,10 @@ public class HomeController : Controller
             }
             
             // Загружаем данные для выпадающих списков
-            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
-            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
-            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
-            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionNamesAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitleNamesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompanyNamesAsync();
             
             return View(contact);
         }
@@ -507,10 +507,10 @@ public class HomeController : Controller
             }
             
             // Если модель невалидна, загружаем данные для выпадающих списков
-            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
-            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
-            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
-            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionNamesAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitleNamesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompanyNamesAsync();
             
             return View(contact);
         }
@@ -520,10 +520,10 @@ public class HomeController : Controller
             ModelState.AddModelError("", "Произошла ошибка при обновлении контакта. Пожалуйста, попробуйте позже.");
             
             // Загружаем данные для выпадающих списков
-            ViewBag.DivisionNames = await _contactService.GetAllDivisionsAsync();
-            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentsAsync();
-            ViewBag.TitleNames = await _contactService.GetAllTitlesAsync();
-            ViewBag.CompanyNames = await _contactService.GetAllCompaniesAsync();
+            ViewBag.DivisionNames = await _contactService.GetAllDivisionNamesAsync();
+            ViewBag.DepartmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            ViewBag.TitleNames = await _contactService.GetAllTitleNamesAsync();
+            ViewBag.CompanyNames = await _contactService.GetAllCompanyNamesAsync();
             
             return View(contact);
         }

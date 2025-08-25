@@ -76,8 +76,8 @@ public class ContactController : ControllerBase
     {
         try
         {
-            var divisions = await _contactService.GetAllDivisionsAsync();
-            return Ok(divisions);
+            var divisionNames = await _contactService.GetAllDivisionNamesAsync();
+            return Ok(divisionNames);
         }
         catch (Exception ex)
         {
@@ -106,8 +106,8 @@ public class ContactController : ControllerBase
     {
         try
         {
-            var departments = await _contactService.GetAllDepartmentsAsync();
-            return Ok(departments);
+            var departmentNames = await _contactService.GetAllDepartmentNamesAsync();
+            return Ok(departmentNames);
         }
         catch (Exception ex)
         {
@@ -136,8 +136,8 @@ public class ContactController : ControllerBase
     {
         try
         {
-            var titles = await _contactService.GetAllTitlesAsync();
-            return Ok(titles);
+            var titleNames = await _contactService.GetAllTitleNamesAsync();
+            return Ok(titleNames);
         }
         catch (Exception ex)
         {
