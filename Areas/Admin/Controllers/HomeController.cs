@@ -395,8 +395,8 @@ public class HomeController : Controller
     {
         try
         {
-            var titleNames = await _contactService.GetAllTitleNamesAsync();
-            return View(titleNames);
+            var titles = await _contactService.GetAllTitlesAsync();
+            return View(titles);
         }
         catch (Exception ex)
         {

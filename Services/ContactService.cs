@@ -81,6 +81,13 @@ public class ContactService
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Title>> GetAllTitlesAsync()
+    {
+        return await _context.Titles
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+    }
+    
     public async Task<int?> ResolveOrCreateDivisionIdAsync(string? divisionName)
     {
         if (string.IsNullOrWhiteSpace(divisionName)) return null;
