@@ -106,6 +106,92 @@ public class LdapService : ILdapService
                 .Where(c => !string.IsNullOrEmpty(c.DistinguishedName))
                 .ToDictionary(c => c.DistinguishedName, c => c);
 
+            // Собираем все уникальные названия для batch processing
+            var allDivisionNames = ldapContacts
+                .Select(c => c.Division?.Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
+            var allDepartmentNames = ldapContacts
+                .Select(c => c.Department?.Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
+            var allTitleNames = ldapContacts
+                .Select(c => c.Title?.Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
+            var allCompanyNames = ldapContacts
+                .Select(c => c.Company?.Name)
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Distinct()
+                .ToList();
+
+            // Получаем существующие сущности одним запросом
+            var existingDivisions = await _context.Divisions
+                .Where(d => allDivisionNames.Contains(d.Name))
+                .ToDictionaryAsync(d => d.Name);
+
+            var existingDepartments = await _context.Departments
+                .Where(d => allDepartmentNames.Contains(d.Name))
+                .ToDictionaryAsync(d => d.Name);
+
+            var existingTitles = await _context.Titles
+                .Where(t => allTitleNames.Contains(t.Name))
+                .ToDictionaryAsync(t => t.Name);
+
+            var existingCompanies = await _context.Companies
+                .Where(c => allCompanyNames.Contains(c.Name))
+                .ToDictionaryAsync(c => c.Name);
+
+            // Создаем новые сущности, которых нет в базе
+            foreach (var divisionName in allDivisionNames)
+            {
+                if (!existingDivisions.ContainsKey(divisionName))
+                {
+                    var newDivision = new Division { Name = divisionName };
+                    _context.Divisions.Add(newDivision);
+                    existingDivisions[divisionName] = newDivision;
+                }
+            }
+
+            foreach (var departmentName in allDepartmentNames)
+            {
+                if (!existingDepartments.ContainsKey(departmentName))
+                {
+                    var newDepartment = new Department { Name = departmentName };
+                    _context.Departments.Add(newDepartment);
+                    existingDepartments[departmentName] = newDepartment;
+                }
+            }
+
+            foreach (var titleName in allTitleNames)
+            {
+                if (!existingTitles.ContainsKey(titleName))
+                {
+                    var newTitle = new Title { Name = titleName };
+                    _context.Titles.Add(newTitle);
+                    existingTitles[titleName] = newTitle;
+                }
+            }
+
+            foreach (var companyName in allCompanyNames)
+            {
+                if (!existingCompanies.ContainsKey(companyName))
+                {
+                    var newCompany = new Company { Name = companyName };
+                    _context.Companies.Add(newCompany);
+                    existingCompanies[companyName] = newCompany;
+                }
+            }
+
+            // Сохраняем все новые сущности одним вызовом
+            await _context.SaveChangesAsync();
+
             // 1. Удаляем устаревшие контакты (только для этого источника)
             var toDelete = dbContacts.Where(c => !ldapDns.Contains(c.DistinguishedName)).ToList();
             if (toDelete.Count > 0)
@@ -123,57 +209,22 @@ public class LdapService : ILdapService
                 string? titleName = ldapContact.Title?.Name;
                 string? companyName = ldapContact.Company?.Name;
 
-                // --- Division ---
-                Division? division = null;
-                if (!string.IsNullOrWhiteSpace(divisionName))
-                {
-                    division = await _context.Divisions.FirstOrDefaultAsync(d => d.Name == divisionName);
-                    if (division == null)
-                    {
-                        division = new Division { Name = divisionName };
-                        _context.Divisions.Add(division);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                // Получаем ID сущностей
+                int? divisionId = !string.IsNullOrEmpty(divisionName) && existingDivisions.TryGetValue(divisionName, out var division) 
+                    ? division.Id 
+                    : null;
 
-                // --- Department ---
-                Department? department = null;
-                if (!string.IsNullOrWhiteSpace(departmentName))
-                {
-                    department = await _context.Departments.FirstOrDefaultAsync(d => d.Name == departmentName);
-                    if (department == null)
-                    {
-                        department = new Department { Name = departmentName };
-                        _context.Departments.Add(department);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                int? departmentId = !string.IsNullOrEmpty(departmentName) && existingDepartments.TryGetValue(departmentName, out var department) 
+                    ? department.Id 
+                    : null;
 
-                // --- Title ---
-                Title? title = null;
-                if (!string.IsNullOrWhiteSpace(titleName))
-                {
-                    title = await _context.Titles.FirstOrDefaultAsync(t => t.Name == titleName);
-                    if (title == null)
-                    {
-                        title = new Title { Name = titleName };
-                        _context.Titles.Add(title);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                int? titleId = !string.IsNullOrEmpty(titleName) && existingTitles.TryGetValue(titleName, out var title) 
+                    ? title.Id 
+                    : null;
 
-                // --- Company ---
-                Company? company = null;
-                if (!string.IsNullOrWhiteSpace(companyName))
-                {
-                    company = await _context.Companies.FirstOrDefaultAsync(c => c.Name == companyName);
-                    if (company == null)
-                    {
-                        company = new Company { Name = companyName };
-                        _context.Companies.Add(company);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                int? companyId = !string.IsNullOrEmpty(companyName) && existingCompanies.TryGetValue(companyName, out var company) 
+                    ? company.Id 
+                    : null;
 
                 if (dbContactsByDn.TryGetValue(ldapContact.DistinguishedName, out var dbContact))
                 {
@@ -181,27 +232,30 @@ public class LdapService : ILdapService
                     dbContact.DisplayName = ldapContact.DisplayName;
                     dbContact.Email = ldapContact.Email;
                     dbContact.PhoneNumber = ldapContact.PhoneNumber;
-                    dbContact.DivisionId = division?.Id;
-                    dbContact.DepartmentId = department?.Id;
-                    dbContact.TitleId = title?.Id;
-                    dbContact.CompanyId = company?.Id;
-                    dbContact.LdapSourceId = source.Id;
-                    dbContact.LdapSource = source;
-                    dbContact.DistinguishedName = ldapContact.DistinguishedName;
+                    dbContact.DivisionId = divisionId;
+                    dbContact.DepartmentId = departmentId;
+                    dbContact.TitleId = titleId;
+                    dbContact.CompanyId = companyId;
                     dbContact.LastUpdated = DateTime.UtcNow;
                     _context.LdapContacts.Update(dbContact);
                 }
                 else
                 {
                     // Добавляем новый контакт
-                    ldapContact.DivisionId = division?.Id;
-                    ldapContact.DepartmentId = department?.Id;
-                    ldapContact.TitleId = title?.Id;
-                    ldapContact.CompanyId = company?.Id;
-                    ldapContact.LdapSourceId = source.Id;
-                    ldapContact.LdapSource = source;
-                    ldapContact.LastUpdated = DateTime.UtcNow;
-                    _context.LdapContacts.Add(ldapContact);
+                    var newContact = new LdapContact
+                    {
+                        DistinguishedName = ldapContact.DistinguishedName,
+                        DisplayName = ldapContact.DisplayName,
+                        Email = ldapContact.Email,
+                        PhoneNumber = ldapContact.PhoneNumber,
+                        DivisionId = divisionId,
+                        DepartmentId = departmentId,
+                        TitleId = titleId,
+                        CompanyId = companyId,
+                        LdapSourceId = source.Id,
+                        LastUpdated = DateTime.UtcNow
+                    };
+                    _context.LdapContacts.Add(newContact);
                 }
             }
 
