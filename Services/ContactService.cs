@@ -742,4 +742,29 @@ public class ContactService
             }
         }
     }
+
+    public async Task<bool> UpdateTitleWeightAsync(int titleId, int delta)
+    {
+        var title = await _context.Titles.FindAsync(titleId);
+        if (title == null)
+        {
+            return false;
+        }
+
+        // Изменяем вес с проверкой границ
+        var newWeight = title.Weight + delta;
+        newWeight = Math.Max(0, Math.Min(100, newWeight)); // Ограничение 0-100
+        
+        title.Weight = newWeight;
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+
+    // И метод для получения обновленного веса
+    public async Task<int?> GetTitleWeightAsync(int titleId)
+    {
+        var title = await _context.Titles.FindAsync(titleId);
+        return title?.Weight;
+    }
 }

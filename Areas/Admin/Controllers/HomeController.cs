@@ -566,4 +566,36 @@ public class HomeController : Controller
             return View("Error", new ErrorViewModel { Message = $"Не удалось удалить контакт с ID {id}. Пожалуйста, попробуйте позже." });
         }
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateTitleWeight([FromBody] UpdateWeightRequest request)
+    {
+        try
+        {
+            // Используем ContactService вместо прямого доступа к контексту
+            var result = await _contactService.UpdateTitleWeightAsync(request.Id, request.Delta);
+            
+            if (!result)
+            {
+                return Json(new { success = false, error = "Должность не найдена" });
+            }
+
+            // Получаем обновленное значение веса через сервис
+            var newWeight = await _contactService.GetTitleWeightAsync(request.Id);
+            
+            return Json(new { success = true, newWeight });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обновлении веса должности {Id}", request.Id);
+            return Json(new { success = false, error = ex.Message });
+        }
+    }
+
+    public class UpdateWeightRequest
+    {
+        public int Id { get; set; }
+        public int Delta { get; set; }
+    }
 }
