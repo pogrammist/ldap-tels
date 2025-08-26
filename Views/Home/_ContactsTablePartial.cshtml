@@ -4,28 +4,53 @@
         <thead>
             <tr>
                 <th>ФИО</th>
-                <th>Подразделение</th>
-                <th>Отдел</th>
                 <th>Должность</th>
                 <th>Телефон</th>
                 <th>Email</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var contact in Model)
+            @{
+                var ordered = Model
+                    .OrderBy(c => c.Division ?? string.Empty)
+                    .ThenBy(c => c.Department ?? string.Empty)
+                    .ThenBy(c => c.DisplayName ?? string.Empty)
+                    .ToList();
+
+                string? currentDivision = null;
+                string? currentDepartment = null;
+            }
+
+            @foreach (var contact in ordered)
             {
+                var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
+                var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
+                var divisionName = hasDivision ? contact.Division : null;
+                var departmentName = hasDepartment ? contact.Department : null;
+
+                if (divisionName != null && currentDivision != divisionName)
+                {
+                    currentDivision = divisionName;
+                    currentDepartment = null; // сбрасываем отдел при смене подразделения
+                    <tr class="table-secondary">
+                        <td colspan="4">
+                            <a asp-action="Division" asp-route-division="@contact.Division" class="fw-bold text-decoration-none">@divisionName</a>
+                        </td>
+                    </tr>
+                }
+
+                if (departmentName != null && currentDepartment != departmentName)
+                {
+                    currentDepartment = departmentName;
+                    <tr class="table-light">
+                        <td colspan="4">
+                            <a asp-action="Department" asp-route-department="@contact.Department" class="text-decoration-none">@departmentName</a>
+                        </td>
+                    </tr>
+                }
+
                 <tr>
                     <td>@contact.DisplayName</td>
-                    <td>
-                        <a asp-action="Division" asp-route-division="@contact.Division">
-                            @contact.Division
-                        </a>
-                    </td>
-                    <td>
-                        <a asp-action="Department" asp-route-department="@contact.Department">
-                            @contact.Department
-                        </a>
-                    </td>
                     <td>
                         <a asp-action="Title" asp-route-title="@contact.Title">
                             @contact.Title
@@ -42,4 +67,4 @@
             }
         </tbody>
     </table>
-</div> 
+</div>
