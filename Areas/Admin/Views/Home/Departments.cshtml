@@ -1,4 +1,4 @@
-@model IEnumerable<string>
+@model IEnumerable<ldap_tels.Models.Department>
 @{
     ViewData["Title"] = "Отделы";
 }
@@ -12,6 +12,9 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+<input type="hidden" id="update-department-weight-url" value="@Url.Action("UpdateDepartmentWeight", "Home", new { area = "Admin" })" />
+
 @if (!Model.Any())
 {
     <div class="alert alert-info">
@@ -20,23 +23,59 @@
 }
 else
 {
-    <div class="row">
-        @foreach (var department in Model)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">@department</h5>
-                        <a asp-action="Department" asp-route-department="@department" class="btn btn-primary mt-2">
-                            <i class="bi bi-people"></i> Просмотр контактов
-                        </a>
-                    </div>
-                </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Отдел</th>
+                            <th>Приоритет</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.Name</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                                                onclick="changeDepartmentWeight(@item.Id, -1)" 
+                                                @(item.Weight <= 0 ? "disabled" : "")>
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        
+                                        <span id="department-weight-@item.Id" class="fw-bold">@item.Weight</span>
+                                        
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" 
+                                                onclick="changeDepartmentWeight(@item.Id, 1)" 
+                                                @(item.Weight >= 100 ? "disabled" : "")>
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a asp-action="Department" asp-route-department="@item.Name" class="btn btn-sm btn-info">
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-        }
+        </div>
     </div>
 }
 
 <div class="mt-4">
     <a asp-action="Index" class="btn btn-secondary">Вернуться на главную</a>
 </div>
+
+@section Scripts {
+    <script src="~/js/departments.js" asp-append-version="true"></script>
+}

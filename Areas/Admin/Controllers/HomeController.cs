@@ -359,8 +359,8 @@ public class HomeController : Controller
     {
         try
         {
-            var departmentNames = await _contactService.GetAllDepartmentNamesAsync();
-            return View(departmentNames);
+            var departments = await _contactService.GetAllDepartmentsAsync();
+            return View(departments);
         }
         catch (Exception ex)
         {
@@ -564,6 +564,32 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "Ошибка при удалении контакта с ID {Id}", id);
             return View("Error", new ErrorViewModel { Message = $"Не удалось удалить контакт с ID {id}. Пожалуйста, попробуйте позже." });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateDepartmentWeight([FromBody] UpdateWeightRequest request)
+    {
+        try
+        {
+            // Используем ContactService вместо прямого доступа к контексту
+            var result = await _contactService.UpdateDepartmentWeightAsync(request.Id, request.Delta);
+            
+            if (!result)
+            {
+                return Json(new { success = false, error = "Должность не найдена" });
+            }
+
+            // Получаем обновленное значение веса через сервис
+            var newWeight = await _contactService.GetDepartmentWeightAsync(request.Id);
+            
+            return Json(new { success = true, newWeight });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обновлении веса отдела {Id}", request.Id);
+            return Json(new { success = false, error = ex.Message });
         }
     }
 
