@@ -25,6 +25,7 @@
 
                 string? currentDivision = null;
                 string? currentDepartment = null;
+                bool insertedBlankForNoDivNoDept = false;
             }
 
             @foreach (var contact in ordered)
@@ -33,6 +34,15 @@
                 var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
                 var divisionName = hasDivision ? contact.Division : null;
                 var departmentName = hasDepartment ? contact.Department : null;
+
+                // Пустая строка перед первой группой без подразделения и без отдела
+                if (!hasDivision && !hasDepartment && !insertedBlankForNoDivNoDept)
+                {
+                    insertedBlankForNoDivNoDept = true;
+                    <tr class="table-secondary">
+                        <td colspan="4"></td>
+                    </tr>
+                }
 
                 if (divisionName != null && currentDivision != divisionName)
                 {

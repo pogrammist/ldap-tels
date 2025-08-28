@@ -1,6 +1,20 @@
 @model IEnumerable<ContactViewModel>
+@{
+    bool insertedBlankForNoDivNoDept = false;
+}
 @foreach (var contact in Model)
 {
+    var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
+    var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
+
+    if (!hasDivision && !hasDepartment && !insertedBlankForNoDivNoDept)
+    {
+        insertedBlankForNoDivNoDept = true;
+        <tr class="table-secondary">
+            <td colspan="4"></td>
+        </tr>
+    }
+
     <tr>
         <td>@contact.DisplayName</td>
         <td>
