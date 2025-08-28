@@ -81,6 +81,13 @@ public class ContactService
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Division>> GetAllDivisionsAsync()
+    {
+        return await _context.Divisions
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Department>> GetAllDepartmentsAsync()
     {
         return await _context.Departments
@@ -748,6 +755,31 @@ public class ContactService
                 }
             }
         }
+    }
+
+    public async Task<bool> UpdateDivisionWeightAsync(int divisionId, int delta)
+    {
+        var division = await _context.Divisions.FindAsync(divisionId);
+        if (division == null)
+        {
+            return false;
+        }
+
+        // Изменяем вес с проверкой границ
+        var newWeight = division.Weight + delta;
+        newWeight = Math.Max(0, Math.Min(100, newWeight)); // Ограничение 0-100
+        
+        division.Weight = newWeight;
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+
+    // И метод для получения обновленного веса
+    public async Task<int?> GetDivisionWeightAsync(int divisionId)
+    {
+        var division = await _context.Divisions.FindAsync(divisionId);
+        return division?.Weight;
     }
 
     public async Task<bool> UpdateDepartmentWeightAsync(int departmentId, int delta)
