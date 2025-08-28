@@ -12,9 +12,15 @@
         <tbody>
             @{
                 var ordered = Model
-                    .OrderBy(c => c.Division ?? string.Empty)
-                    .ThenBy(c => c.Department ?? string.Empty)
-                    .ThenBy(c => c.DisplayName ?? string.Empty)
+                    .OrderByDescending(c => c.DivisionWeight) // Сначала по весу подразделения (по убыванию)
+                    .ThenBy(c => string.IsNullOrEmpty(c.Division) ? 1 : 0) // Пустые подразделения в конце
+                    .ThenBy(c => c.Division ?? string.Empty) // Затем по названию подразделения
+                    .ThenByDescending(c => c.DepartmentWeight) // По весу отдела (по убыванию)
+                    .ThenBy(c => string.IsNullOrEmpty(c.Department) ? 1 : 0) // Пустые отделы в конце
+                    .ThenBy(c => c.Department ?? string.Empty) // Затем по названию отдела
+                    .ThenByDescending(c => c.TitleWeight) // По весу должности (по убыванию)
+                    .ThenBy(c => c.Title ?? string.Empty) // Затем по названию должности
+                    .ThenBy(c => c.DisplayName ?? string.Empty) // И наконец по имени
                     .ToList();
 
                 string? currentDivision = null;

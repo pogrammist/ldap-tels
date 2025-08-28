@@ -23,4 +23,9 @@ public class ContactViewModel
     public int? LdapSourceId { get; set; }
     public LdapSource? LdapSource { get; set; }
     public DateTime LastUpdated { get; set; }
+    
+    // Weight properties for sorting
+    public int DivisionWeight { get; set; } = 0;
+    public int DepartmentWeight { get; set; } = 0;
+    public int TitleWeight { get; set; } = 0;
 }

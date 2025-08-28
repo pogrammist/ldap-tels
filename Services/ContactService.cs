@@ -171,7 +171,10 @@ public class ContactService
                 ContactType = ContactType.Manual,
                 DistinguishedName = null,
                 LdapSourceId = null,
-                LdapSource = null
+                LdapSource = null,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
@@ -194,16 +197,24 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = c.DistinguishedName,
                 LdapSourceId = c.LdapSourceId,
-                LdapSource = c.LdapSource
+                LdapSource = c.LdapSource,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
-        // Объединяем и сортируем в памяти
+        // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderBy(x => x.Division)
-            .ThenBy(x => x.Department)
-            .ThenBy(x => x.Title)
-            .ThenBy(x => x.DisplayName)
+            .OrderByDescending(x => x.DivisionWeight) // Сначала по весу подразделения (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
+            .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
+            .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
+            .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
+            .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
+            .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
@@ -240,7 +251,10 @@ public class ContactService
                 Department = manual.Department?.Name,
                 Title = manual.Title?.Name,
                 Company = manual.Company?.Name,
-                ContactType = ContactType.Manual
+                ContactType = ContactType.Manual,
+                DivisionWeight = manual.Division?.Weight ?? 0,
+                DepartmentWeight = manual.Department?.Weight ?? 0,
+                TitleWeight = manual.Title?.Weight ?? 0
             };
         }
         var ldap = await _context.LdapContacts
@@ -265,7 +279,10 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = ldap.DistinguishedName,
                 LdapSourceId = ldap.LdapSourceId,
-                LdapSource = ldap.LdapSource
+                LdapSource = ldap.LdapSource,
+                DivisionWeight = ldap.Division?.Weight ?? 0,
+                DepartmentWeight = ldap.Department?.Weight ?? 0,
+                TitleWeight = ldap.Title?.Weight ?? 0
             };
         }
         return null;
@@ -303,7 +320,10 @@ public class ContactService
                 ContactType = ContactType.Manual,
                 DistinguishedName = null,
                 LdapSourceId = null,
-                LdapSource = null
+                LdapSource = null,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
@@ -335,16 +355,24 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = c.DistinguishedName,
                 LdapSourceId = c.LdapSourceId,
-                LdapSource = c.LdapSource
+                LdapSource = c.LdapSource,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
-        // Объединяем и сортируем в памяти
+        // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderBy(x => x.Division)
-            .ThenBy(x => x.Department)
-            .ThenBy(x => x.Title)
-            .ThenBy(x => x.DisplayName)
+            .OrderByDescending(x => x.DivisionWeight) // Сначала по весу подразделения (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
+            .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
+            .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
+            .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
+            .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
+            .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
@@ -404,7 +432,10 @@ public class ContactService
                 ContactType = ContactType.Manual,
                 DistinguishedName = null,
                 LdapSourceId = null,
-                LdapSource = null
+                LdapSource = null,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
@@ -428,14 +459,21 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = c.DistinguishedName,
                 LdapSourceId = c.LdapSourceId,
-                LdapSource = c.LdapSource
+                LdapSource = c.LdapSource,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
-        // Объединяем и сортируем в памяти
+        // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderBy(x => x.Department != null ? x.Department : "")
-            .ThenBy(x => x.DisplayName)
+            .OrderByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
+            .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
+            .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
+            .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
+            .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
@@ -478,7 +516,10 @@ public class ContactService
                 ContactType = ContactType.Manual,
                 DistinguishedName = null,
                 LdapSourceId = null,
-                LdapSource = null
+                LdapSource = null,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
@@ -502,14 +543,21 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = c.DistinguishedName,
                 LdapSourceId = c.LdapSourceId,
-                LdapSource = c.LdapSource
+                LdapSource = c.LdapSource,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
-        // Объединяем и сортируем в памяти
+        // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderBy(x => x.Division != null ? x.Division : "")
-            .ThenBy(x => x.DisplayName)
+            .OrderByDescending(x => x.DivisionWeight) // По весу подразделения (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
+            .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
+            .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
+            .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
@@ -553,7 +601,10 @@ public class ContactService
                 ContactType = ContactType.Manual,
                 DistinguishedName = null,
                 LdapSourceId = null,
-                LdapSource = null
+                LdapSource = null,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
@@ -577,15 +628,22 @@ public class ContactService
                 ContactType = ContactType.Ldap,
                 DistinguishedName = c.DistinguishedName,
                 LdapSourceId = c.LdapSourceId,
-                LdapSource = c.LdapSource
+                LdapSource = c.LdapSource,
+                DivisionWeight = c.Division != null ? c.Division.Weight : 0,
+                DepartmentWeight = c.Department != null ? c.Department.Weight : 0,
+                TitleWeight = c.Title != null ? c.Title.Weight : 0
             })
             .ToListAsync();
 
-        // Объединяем и сортируем в памяти
+        // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderBy(x => x.Division != null ? x.Division : "")
-            .ThenBy(x => x.Department != null ? x.Department : "")
-            .ThenBy(x => x.DisplayName)
+            .OrderByDescending(x => x.DivisionWeight) // По весу подразделения (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
+            .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
+            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
+            .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
+            .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
