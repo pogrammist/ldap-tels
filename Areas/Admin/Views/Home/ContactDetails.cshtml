@@ -40,10 +40,7 @@
                             <span class="text-muted">Не указан</span>
                         }
                     </dd>
-                </dl>
-            </div>
-            <div class="col-md-6">
-                <dl class="row">
+
                     <dt class="col-sm-4">Телефон:</dt>
                     <dd class="col-sm-8">
                         @if (!string.IsNullOrEmpty(Model.PhoneNumber))
@@ -55,7 +52,24 @@
                             <span class="text-muted">Не указан</span>
                         }
                     </dd>
-                    
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Подразделение:</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Division))
+                        {
+                            <a asp-action="Division" asp-route-division="@Model.Division">
+                                @Model.Division
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Не указан</span>
+                        }
+                    </dd>
+
                     <dt class="col-sm-4">Отдел:</dt>
                     <dd class="col-sm-8">
                         @if (!string.IsNullOrEmpty(Model.Department))
@@ -74,7 +88,9 @@
                     <dd class="col-sm-8">
                         @if (!string.IsNullOrEmpty(Model.Title))
                         {
-                            @Model.Title
+                            <a asp-action="Title" asp-route-title="@Model.Title">
+                                @Model.Title
+                            </a>
                         }
                         else
                         {
@@ -86,7 +102,9 @@
                     <dd class="col-sm-8">
                         @if (!string.IsNullOrEmpty(Model.Company))
                         {
-                            @Model.Company
+                            <a asp-action="Company" asp-route-company="@Model.Company">
+                                @Model.Company
+                            </a>
                         }
                         else
                         {
