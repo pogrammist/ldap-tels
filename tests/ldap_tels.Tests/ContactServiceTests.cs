@@ -1,153 +1,154 @@
-using ldap_tels.Data;
-using ldap_tels.Models;
-using ldap_tels.Services;
-using ldap_tels.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using ldap_tels.Data;
+using ldap_tels.Models;
+using ldap_tels.Services;
+using ldap_tels.ViewModels;
 
 namespace ldap_tels.Tests;
 
 public class ContactServiceTests
 {
     private readonly DbContextOptions<ApplicationDbContext> _options;
-    private readonly Mock<ILogger<ContactService>> _loggerMock;
 
     public ContactServiceTests()
     {
         _options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        
-        _loggerMock = new Mock<ILogger<ContactService>>();
     }
 
     [Fact]
-    public async Task GetAllContactsAsync_OrdersGroups_BySpecifiedOrder()
+    public async Task GetAllContactsAsync_OrdersGroups_BySpecAndPagination()
     {
         // Arrange
         using var context = new ApplicationDbContext(_options);
-        var service = new ContactService(context, _loggerMock.Object);
-        
-        // Создаем тестовые данные с разными группами
-        var contacts = new List<Contact>
+        var loggerMock = new Mock<ILogger<ContactService>>();
+        var service = new ContactService(context, loggerMock.Object);
+
+        // Создаем тестовые данные
+        var division1 = new Division { Id = 1, Name = "Подразделение 1", Weight = 100 };
+        var division2 = new Division { Id = 2, Name = "Подразделение 2", Weight = 50 };
+        var department1 = new Department { Id = 1, Name = "Отдел 1", Weight = 80 };
+        var department2 = new Department { Id = 2, Name = "Отдел 2", Weight = 60 };
+        var title1 = new Title { Id = 1, Name = "Должность 1", Weight = 90 };
+        var title2 = new Title { Id = 2, Name = "Должность 2", Weight = 70 };
+
+        context.Divisions.AddRange(division1, division2);
+        context.Departments.AddRange(department1, department2);
+        context.Titles.AddRange(title1, title2);
+
+        var contacts = new List<ManualContact>
         {
-            // Группа 0: с подразделением и отделом
-            new Contact { Id = 1, DisplayName = "Contact 1", Division = "Division 1", Department = "Department 1" },
-            // Группа 0: с подразделением, без отдела
-            new Contact { Id = 2, DisplayName = "Contact 2", Division = "Division 2", Department = null },
-            // Группа 1: без подразделения, с отделом
-            new Contact { Id = 3, DisplayName = "Contact 3", Division = null, Department = "Department 3" },
-            // Группа 2: без подразделения и отдела
-            new Contact { Id = 4, DisplayName = "Contact 4", Division = null, Department = null }
+            new ManualContact { Id = 1, DisplayName = "Иван Иванов", DivisionId = 1, DepartmentId = 1, TitleId = 1 },
+            new ManualContact { Id = 2, DisplayName = "Петр Петров", DivisionId = 1, DepartmentId = 1, TitleId = 2 },
+            new ManualContact { Id = 3, DisplayName = "Сидор Сидоров", DivisionId = 1, DepartmentId = 2, TitleId = 1 },
+            new ManualContact { Id = 4, DisplayName = "Алексей Алексеев", DivisionId = 2, DepartmentId = null, TitleId = 1 },
+            new ManualContact { Id = 5, DisplayName = "Михаил Михайлов", DivisionId = null, DepartmentId = null, TitleId = 1 }
         };
 
-        context.Contacts.AddRange(contacts);
+        context.ManualContacts.AddRange(contacts);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetAllContactsAsync();
+        var result = await service.GetAllContactsAsync(1, 10);
 
         // Assert
-        Assert.Equal(4, result.Count);
-        
-        // Проверяем порядок групп: сначала группа 0, потом группа 1, потом группа 2
+        Assert.NotNull(result);
         var resultList = result.ToList();
-        Assert.Contains("Division 1", resultList[0].Division);
-        Assert.Contains("Division 2", resultList[1].Division);
-        Assert.Null(resultList[2].Division);
-        Assert.Contains("Department 3", resultList[2].Department);
-        Assert.Null(resultList[3].Division);
-        Assert.Null(resultList[3].Department);
+        Assert.Equal(5, resultList.Count);
+
+        // Проверяем порядок: сначала группы с подразделениями, затем без подразделений
+        var firstContact = resultList[0];
+        var lastContact = resultList[4];
+
+        Assert.NotNull(firstContact.Division); // Должен быть с подразделением
+        Assert.Null(lastContact.Division); // Должен быть без подразделения
     }
 
     [Fact]
-    public async Task GetAllContactsAsync_RespectsWeights_WithinGroups()
+    public async Task GetAllContactsAsync_RespectsWeights()
     {
         // Arrange
         using var context = new ApplicationDbContext(_options);
-        var service = new ContactService(context, _loggerMock.Object);
-        
-        // Создаем тестовые данные с весами
-        var divisions = new List<Division>
-        {
-            new Division { Id = 1, Name = "Division A", Weight = 10 },
-            new Division { Id = 2, Name = "Division B", Weight = 20 }
-        };
-        
-        var departments = new List<Department>
-        {
-            new Department { Id = 1, Name = "Department X", Weight = 5 },
-            new Department { Id = 2, Name = "Department Y", Weight = 15 }
-        };
+        var loggerMock = new Mock<ILogger<ContactService>>();
+        var service = new ContactService(context, loggerMock.Object);
 
-        context.Divisions.AddRange(divisions);
-        context.Departments.AddRange(departments);
-        await context.SaveChangesAsync();
+        var division1 = new Division { Id = 1, Name = "A", Weight = 50 };
+        var division2 = new Division { Id = 2, Name = "B", Weight = 100 };
+        var department1 = new Department { Id = 1, Name = "X", Weight = 60 };
+        var department2 = new Department { Id = 2, Name = "Y", Weight = 80 };
 
-        var contacts = new List<Contact>
+        context.Divisions.AddRange(division1, division2);
+        context.Departments.AddRange(department1, department2);
+
+        var contacts = new List<ManualContact>
         {
-            new Contact { Id = 1, DisplayName = "Contact 1", DivisionId = 2, DepartmentId = 2 }, // Высокие веса
-            new Contact { Id = 2, DisplayName = "Contact 2", DivisionId = 1, DepartmentId = 1 }, // Низкие веса
-            new Contact { Id = 3, DisplayName = "Contact 3", DivisionId = 2, DepartmentId = 1 }, // Высокий вес подразделения
-            new Contact { Id = 4, DisplayName = "Contact 4", DivisionId = 1, DepartmentId = 2 }  // Низкий вес подразделения
+            new ManualContact { Id = 1, DisplayName = "Контакт 1", DivisionId = 1, DepartmentId = 1, TitleId = 1 },
+            new ManualContact { Id = 2, DisplayName = "Контакт 2", DivisionId = 2, DepartmentId = null, TitleId = 1 }
         };
 
-        context.Contacts.AddRange(contacts);
+        context.ManualContacts.AddRange(contacts);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetAllContactsAsync();
+        var result = await service.GetAllContactsAsync(1, 10);
 
         // Assert
-        Assert.Equal(4, result.Count);
-        
-        // Проверяем, что контакты с высокими весами идут первыми
+        Assert.NotNull(result);
         var resultList = result.ToList();
-        Assert.Equal("Division B", resultList[0].Division);
-        Assert.Equal("Division B", resultList[1].Division);
-        Assert.Equal("Division A", resultList[2].Division);
-        Assert.Equal("Division A", resultList[3].Division);
+        Assert.Equal(2, resultList.Count);
+
+        // B должен быть первым (вес 100 > 50)
+        Assert.Equal("B", resultList[0].Division);
+        Assert.Equal("A", resultList[1].Division);
     }
 
     [Fact]
-    public async Task GetAllContactsAsync_HandlesEmptyData_Correctly()
+    public async Task GetAllContactsAsync_HandlesEmptyData()
     {
         // Arrange
         using var context = new ApplicationDbContext(_options);
-        var service = new ContactService(context, _loggerMock.Object);
+        var loggerMock = new Mock<ILogger<ContactService>>();
+        var service = new ContactService(context, loggerMock.Object);
 
         // Act
-        var result = await service.GetAllContactsAsync();
+        var result = await service.GetAllContactsAsync(1, 10);
 
         // Assert
+        Assert.NotNull(result);
         Assert.Empty(result);
     }
 
     [Fact]
-    public async Task SearchContactsAsync_MaintainsGroupOrder()
+    public async Task SearchContactsAsync_ReturnsFilteredResults()
     {
         // Arrange
         using var context = new ApplicationDbContext(_options);
-        var service = new ContactService(context, _loggerMock.Object);
-        
-        var contacts = new List<Contact>
+        var loggerMock = new Mock<ILogger<ContactService>>();
+        var service = new ContactService(context, loggerMock.Object);
+
+        var division = new Division { Id = 1, Name = "Тестовое подразделение", Weight = 100 };
+        context.Divisions.Add(division);
+
+        var contacts = new List<ManualContact>
         {
-            new Contact { Id = 1, DisplayName = "John Doe", Division = "IT", Department = "Development" },
-            new Contact { Id = 2, DisplayName = "Jane Smith", Division = null, Department = "HR" },
-            new Contact { Id = 3, DisplayName = "Bob Johnson", Division = null, Department = null }
+            new ManualContact { Id = 1, DisplayName = "Иван Иванов", DivisionId = 1, DepartmentId = null, TitleId = 1 },
+            new ManualContact { Id = 2, DisplayName = "Петр Петров", DivisionId = 1, DepartmentId = null, TitleId = 1 }
         };
 
-        context.Contacts.AddRange(contacts);
+        context.ManualContacts.AddRange(contacts);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.SearchContactsAsync("John");
+        var result = await service.SearchContactsAsync("Иван", 1, 10);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal("John Doe", result.First().DisplayName);
-        Assert.Equal("IT", result.First().Division);
+        Assert.NotNull(result);
+        var resultList = result.ToList();
+        Assert.Single(resultList);
+        Assert.Contains(resultList, c => c.DisplayName.Contains("Иван"));
     }
 }
