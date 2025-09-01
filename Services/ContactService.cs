@@ -206,11 +206,10 @@ public class ContactService
 
         // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderByDescending(x => x.DivisionWeight) // Сначала по весу подразделения (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .OrderBy(x => GetGroupOrder(x)) // Сначала по порядку групп
+            .ThenByDescending(x => x.DivisionWeight) // Затем по весу подразделения (по убыванию)
             .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
             .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
             .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
             .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
             .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
@@ -364,11 +363,10 @@ public class ContactService
 
         // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderByDescending(x => x.DivisionWeight) // Сначала по весу подразделения (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .OrderBy(x => GetGroupOrder(x)) // Сначала по порядку групп
+            .ThenByDescending(x => x.DivisionWeight) // Затем по весу подразделения (по убыванию)
             .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
             .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
             .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
             .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
             .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
@@ -469,7 +467,6 @@ public class ContactService
         // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
             .OrderByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
             .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
             .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
             .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
@@ -553,7 +550,6 @@ public class ContactService
         // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
             .OrderByDescending(x => x.DivisionWeight) // По весу подразделения (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
             .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
             .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
             .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
@@ -637,12 +633,13 @@ public class ContactService
 
         // Объединяем и сортируем в памяти с учетом весов
         var allContacts = manuals.Concat(ldaps)
-            .OrderByDescending(x => x.DivisionWeight) // По весу подразделения (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Division) ? 1 : 0) // Пустые подразделения в конце
+            .OrderBy(x => GetGroupOrder(x)) // Сначала по порядку групп
+            .ThenByDescending(x => x.DivisionWeight) // Затем по весу подразделения (по убыванию)
             .ThenBy(x => x.Division ?? string.Empty) // Затем по названию подразделения
             .ThenByDescending(x => x.DepartmentWeight) // По весу отдела (по убыванию)
-            .ThenBy(x => string.IsNullOrEmpty(x.Department) ? 1 : 0) // Пустые отделы в конце
             .ThenBy(x => x.Department ?? string.Empty) // Затем по названию отдела
+            .ThenByDescending(x => x.TitleWeight) // По весу должности (по убыванию)
+            .ThenBy(x => x.Title ?? string.Empty) // Затем по названию должности
             .ThenBy(x => x.DisplayName) // И наконец по имени
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -888,5 +885,30 @@ public class ContactService
     {
         var title = await _context.Titles.FindAsync(titleId);
         return title?.Weight;
+    }
+
+    /// <summary>
+    /// Определяет порядок группы для сортировки
+    /// 0 - группы с непустыми подразделениями (любые отделы)
+    /// 1 - группы с пустыми подразделениями, но непустыми отделами
+    /// 2 - группы с пустыми подразделениями и пустыми отделами
+    /// </summary>
+    private static int GetGroupOrder(ContactViewModel contact)
+    {
+        var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
+        var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
+
+        if (hasDivision)
+        {
+            return 0; // Группы с непустыми подразделениями (любые отделы)
+        }
+        else if (hasDepartment)
+        {
+            return 1; // Группы с пустыми подразделениями, но непустыми отделами
+        }
+        else
+        {
+            return 2; // Группы с пустыми подразделениями и пустыми отделами
+        }
     }
 }
