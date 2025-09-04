@@ -37,12 +37,8 @@
     }
     else
     {
-        <div class="card mb-4">
-            <div class="card-body">
-                <div id="contacts-container">
-                    @await Html.PartialAsync("_ContactsTablePartial", Model)
-                </div>
-            </div>
+        <div id="contacts-container">
+            @await Html.PartialAsync("_ContactsTablePartial", Model)
         </div>
     }
 </div>
