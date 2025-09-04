@@ -63,7 +63,7 @@
         }
 
         const searchInput = document.getElementById('liveSearchInput');
-        const tableContainer = document.querySelector('.table-responsive');
+        const contactsContainer = document.getElementById('contacts-container');
         const clearBtn = document.getElementById('clearSearchBtn');
 
         function toggleClearBtn() {
@@ -77,12 +77,8 @@
             const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (response.ok) {
                 const html = await response.text();
-                // Парсим только таблицу из ответа
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                const newTable = tempDiv.querySelector('.table-responsive');
-                if (newTable && tableContainer) {
-                    tableContainer.innerHTML = newTable.innerHTML;
+                if (contactsContainer) {
+                    contactsContainer.innerHTML = html;
                 }
             }
         }

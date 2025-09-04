@@ -99,7 +99,11 @@ class InfiniteScroll {
     }
     
     appendRowsHtml(rowsHtml) {
-        const tableBody = this.container.querySelector('tbody');
+        // Находим последний видимый tbody последней таблицы внутри контейнера
+        const tables = this.container.querySelectorAll('table');
+        if (!tables || tables.length === 0) return;
+        const lastTable = tables[tables.length - 1];
+        const tableBody = lastTable.querySelector('tbody');
         if (!tableBody) return;
         const temp = document.createElement('tbody');
         temp.innerHTML = rowsHtml;

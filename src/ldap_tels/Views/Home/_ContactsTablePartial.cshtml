@@ -1,84 +1,167 @@
 @model IEnumerable<ContactViewModel>
-<div class="table-responsive table-card">
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>ФИО</th>
-                <th>Должность</th>
-                <th>Телефон</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                string? currentDivision = null;
-                string? currentDepartment = null;
-                bool insertedBlankForNoDivWithDept = false;
-                bool insertedBlankForNoDivNoDept = false;
-            }
+@{
+    var contacts = Model.ToList();
+    int i = 0;
+    bool firstTableRendered = false;
+}
 
-            @foreach (var contact in Model)
-            {
-                var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
-                var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
-                var divisionName = hasDivision ? contact.Division : null;
-                var departmentName = hasDepartment ? contact.Department : null;
+@while (i < contacts.Count)
+{
+    var contact = contacts[i];
+    var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
+    var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
 
-                // Пустая строка перед первой группой без подразделения, но с отделом
-                if (!hasDivision && hasDepartment && !insertedBlankForNoDivWithDept)
-                {
-                    insertedBlankForNoDivWithDept = true;
-                    <tr class="table-secondary">
-                        <td colspan="4"></td>
+    // Отступ между таблицами (кроме первой)
+    if (firstTableRendered)
+    {
+        <div class="mb-4"></div>
+    }
+
+    if (hasDivision)
+    {
+        // Таблица подразделения, внутри — отделы
+        string currentDivision = contact.Division!;
+        string? currentDepartment = null;
+        <div class="table-responsive table-card">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="4">
+                            <a asp-action="Division" asp-route-division="@currentDivision" class="fw-bold text-decoration-none">@currentDivision</a>
+                        </th>
                     </tr>
-                }
-
-                // Пустая строка перед первой группой без подразделения и без отдела
-                if (!hasDivision && !hasDepartment && !insertedBlankForNoDivNoDept)
-                {
-                    insertedBlankForNoDivNoDept = true;
-                    <tr class="table-secondary">
-                        <td colspan="4"></td>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Должность</th>
+                        <th>Телефон</th>
+                        <th>Email</th>
                     </tr>
-                }
-
-                if (divisionName != null && currentDivision != divisionName)
-                {
-                    currentDivision = divisionName;
-                    currentDepartment = null; // сбрасываем отдел при смене подразделения
-                    <tr class="table-secondary">
-                        <td colspan="4">
-                            <a asp-action="Division" asp-route-division="@contact.Division" class="fw-bold text-decoration-none">@divisionName</a>
-                        </td>
-                    </tr>
-                }
-
-                if (departmentName != null && currentDepartment != departmentName)
-                {
-                    currentDepartment = departmentName;
-                    <tr class="table-light">
-                        <td colspan="4">
-                            <a asp-action="Department" asp-route-department="@contact.Department" class="text-decoration-none">@departmentName</a>
-                        </td>
-                    </tr>
-                }
-
-                <tr>
-                    <td>@contact.DisplayName</td>
-                    <td>
-                        <a asp-action="Title" asp-route-title="@contact.Title">
-                            @contact.Title
-                        </a>
-                    </td>
-                    <td>@contact.PhoneNumber</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(contact.Email))
+                </thead>
+                <tbody>
+                    @while (i < contacts.Count && string.Equals(contacts[i].Division, currentDivision, StringComparison.Ordinal))
+                    {
+                        var row = contacts[i];
+                        var rowHasDepartment = !string.IsNullOrWhiteSpace(row.Department);
+                        if (rowHasDepartment && currentDepartment != row.Department)
                         {
-                            <a href="mailto:@contact.Email">@contact.Email</a>
+                            currentDepartment = row.Department;
+                            <tr class="table-light">
+                                <td colspan="4">
+                                    <a asp-action="Department" asp-route-department="@row.Department" class="text-decoration-none">@currentDepartment</a>
+                                </td>
+                            </tr>
                         }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+
+                        <tr>
+                            <td>@row.DisplayName</td>
+                            <td>
+                                <a asp-action="Title" asp-route-title="@row.Title">
+                                    @row.Title
+                                </a>
+                            </td>
+                            <td>@row.PhoneNumber</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(row.Email))
+                                {
+                                    <a href="mailto:@row.Email">@row.Email</a>
+                                }
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+        firstTableRendered = true;
+        continue;
+    }
+    else if (!hasDivision && hasDepartment)
+    {
+        // Таблица для отдела без подразделения (одна таблица на отдел)
+        string currentDepartment = contact.Department!;
+        <div class="table-responsive table-card">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="4">
+                            <a asp-action="Department" asp-route-department="@currentDepartment" class="text-decoration-none">@currentDepartment</a>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Должность</th>
+                        <th>Телефон</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @while (i < contacts.Count && string.IsNullOrWhiteSpace(contacts[i].Division) && string.Equals(contacts[i].Department, currentDepartment, StringComparison.Ordinal))
+                    {
+                        var row = contacts[i];
+                        <tr>
+                            <td>@row.DisplayName</td>
+                            <td>
+                                <a asp-action="Title" asp-route-title="@row.Title">
+                                    @row.Title
+                                </a>
+                            </td>
+                            <td>@row.PhoneNumber</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(row.Email))
+                                {
+                                    <a href="mailto:@row.Email">@row.Email</a>
+                                }
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+        firstTableRendered = true;
+        continue;
+    }
+    else
+    {
+        // Остаток: контакты без подразделения и без отдела — одна итоговая таблица
+        <div class="table-responsive table-card">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="4">Без подразделения и отдела</th>
+                    </tr>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Должность</th>
+                        <th>Телефон</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @while (i < contacts.Count && string.IsNullOrWhiteSpace(contacts[i].Division) && string.IsNullOrWhiteSpace(contacts[i].Department))
+                    {
+                        var row = contacts[i];
+                        <tr>
+                            <td>@row.DisplayName</td>
+                            <td>
+                                <a asp-action="Title" asp-route-title="@row.Title">
+                                    @row.Title
+                                </a>
+                            </td>
+                            <td>@row.PhoneNumber</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(row.Email))
+                                {
+                                    <a href="mailto:@row.Email">@row.Email</a>
+                                }
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+        firstTableRendered = true;
+        continue;
+    }
+}
