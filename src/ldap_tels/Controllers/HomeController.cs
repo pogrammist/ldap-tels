@@ -51,6 +51,12 @@ public class HomeController : Controller
         {
             if (string.IsNullOrWhiteSpace(query))
             {
+                // Для AJAX-запроса при пустом поиске возвращаем первую страницу всех контактов
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    var contactsAll = await _contactService.GetAllContactsAsync(1, pageSize);
+                    return PartialView("_ContactsTablePartial", contactsAll);
+                }
                 return RedirectToAction(nameof(Index));
             }
 
@@ -114,14 +120,19 @@ public class HomeController : Controller
 
     [HttpGet("api/contacts")]
     [ApiExplorerSettings(IgnoreApi = false)]
-    public async Task<IActionResult> GetContactsApi(int page = 1, int pageSize = 50, string? department = null, string? division = null, string? title = null)
+    public async Task<IActionResult> GetContactsApi(int page = 1, int pageSize = 50, string? department = null, string? division = null, string? title = null, string? query = null)
     {
         try
         {
             IEnumerable<ContactViewModel> contacts;
             int totalCount;
 
-            if (!string.IsNullOrEmpty(department))
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                contacts = await _contactService.SearchContactsAsync(query, page, pageSize);
+                totalCount = await _contactService.GetSearchResultsCountAsync(query);
+            }
+            else if (!string.IsNullOrEmpty(department))
             {
                 contacts = await _contactService.GetContactsByDepartmentAsync(department, page, pageSize);
                 totalCount = await _contactService.GetContactsByDepartmentCountAsync(department);
