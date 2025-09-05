@@ -9,7 +9,7 @@ class InfiniteScroll {
             ...options
         };
         
-        this.currentPage = 2; // первая страница уже отрендерена сервером
+        this.currentPage = 1; // запрашиваем первую страницу на клиенте
         this.isLoading = false;
         this.hasMore = true;
         this.department = null;
@@ -33,6 +33,9 @@ class InfiniteScroll {
         
         // Добавляем индикатор загрузки
         this.addLoadingIndicator();
+
+        // Загрузим первую страницу сразу
+        this.loadMore();
     }
     
     handleScroll() {
@@ -62,7 +65,7 @@ class InfiniteScroll {
             const data = await response.json();
             
             if (typeof data.rows === 'string' && data.rows.trim().length > 0) {
-                this.appendRowsHtml(data.rows);
+                this.renderRowsHtml(data.rows);
                 this.currentPage = data.currentPage + 1;
                 this.hasMore = data.hasMore;
             } else {
@@ -98,19 +101,131 @@ class InfiniteScroll {
         return url.toString();
     }
     
-    appendRowsHtml(rowsHtml) {
-        // Находим последний видимый tbody последней таблицы внутри контейнера
-        const tables = this.container.querySelectorAll('table');
-        if (!tables || tables.length === 0) return;
-        const lastTable = tables[tables.length - 1];
-        const tableBody = lastTable.querySelector('tbody');
-        if (!tableBody) return;
+    renderRowsHtml(rowsHtml) {
         const temp = document.createElement('tbody');
         temp.innerHTML = rowsHtml;
-        // Переносим только <tr> внутрь текущего tbody
-        while (temp.firstChild) {
-            tableBody.appendChild(temp.firstChild);
+        const rows = Array.from(temp.querySelectorAll('tr'));
+        for (const row of rows) {
+            const division = (row.getAttribute('data-division') || '').trim();
+            const department = (row.getAttribute('data-department') || '').trim();
+
+            if (division) {
+                const { tbody } = this.getOrCreateDivisionTable(division);
+                this.ensureDepartmentHeaderIfNeeded(tbody, division, department);
+                tbody.appendChild(row);
+            } else if (!division && department) {
+                const tbody = this.getOrCreateDepartmentOnlyTable(department);
+                tbody.appendChild(row);
+            } else {
+                const tbody = this.getOrCreateNoneTable();
+                tbody.appendChild(row);
+            }
         }
+    }
+
+    getOrCreateDivisionTable(division) {
+        const tableId = `table-division-${encodeURIComponent(division)}`;
+        let wrapper = this.container.querySelector(`div[data-division-wrapper="${division}"]`);
+        if (!wrapper) {
+            // Отступ между таблицами
+            if (this.container.lastElementChild) {
+                const spacer = document.createElement('div');
+                spacer.className = 'mb-4';
+                this.container.appendChild(spacer);
+            }
+            wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive table-card';
+            wrapper.setAttribute('data-division-wrapper', division);
+            const table = document.createElement('table');
+            table.className = 'table table-striped table-hover';
+            table.id = tableId;
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th colspan="4">
+                            <a href="/Home/Division?division=${encodeURIComponent(division)}" class="fw-bold text-decoration-none">${division}</a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody data-last-department=""></tbody>
+            `;
+            wrapper.appendChild(table);
+            this.container.appendChild(wrapper);
+        }
+        const tbody = wrapper.querySelector('tbody');
+        return { wrapper, tbody };
+    }
+
+    ensureDepartmentHeaderIfNeeded(tbody, division, department) {
+        if (!department) return;
+        const lastDept = tbody.getAttribute('data-last-department') || '';
+        if (lastDept !== department) {
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'table-light';
+            headerRow.innerHTML = `
+                <td colspan="4">
+                    <a href="/Home/Department?department=${encodeURIComponent(department)}" class="text-decoration-none">${department}</a>
+                </td>
+            `;
+            tbody.appendChild(headerRow);
+            tbody.setAttribute('data-last-department', department);
+        }
+    }
+
+    getOrCreateDepartmentOnlyTable(department) {
+        let wrapper = this.container.querySelector(`div[data-department-wrapper="${department}"]`);
+        if (!wrapper) {
+            if (this.container.lastElementChild) {
+                const spacer = document.createElement('div');
+                spacer.className = 'mb-4';
+                this.container.appendChild(spacer);
+            }
+            wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive table-card';
+            wrapper.setAttribute('data-department-wrapper', department);
+            const table = document.createElement('table');
+            table.className = 'table table-striped table-hover';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th colspan="4">
+                            <a href="/Home/Department?department=${encodeURIComponent(department)}" class="text-decoration-none">${department}</a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            wrapper.appendChild(table);
+            this.container.appendChild(wrapper);
+        }
+        return wrapper.querySelector('tbody');
+    }
+
+    getOrCreateNoneTable() {
+        let wrapper = this.container.querySelector('div[data-none-wrapper="true"]');
+        if (!wrapper) {
+            if (this.container.lastElementChild) {
+                const spacer = document.createElement('div');
+                spacer.className = 'mb-4';
+                this.container.appendChild(spacer);
+            }
+            wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive table-card';
+            wrapper.setAttribute('data-none-wrapper', 'true');
+            const table = document.createElement('table');
+            table.className = 'table table-striped table-hover';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th colspan="4">Другие</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            wrapper.appendChild(table);
+            this.container.appendChild(wrapper);
+        }
+        return wrapper.querySelector('tbody');
     }
     
     addLoadingIndicator() {
@@ -145,12 +260,8 @@ class InfiniteScroll {
         const indicator = document.getElementById('loading-indicator');
         if (indicator) {
             if (!this.hasMore) {
-                indicator.innerHTML = `
-                    <div class="text-muted">
-                        <i class="bi bi-check-circle"></i>
-                        ${this.options.noMoreText}
-                    </div>
-                `;
+                // Ничего не показываем, просто скрываем индикатор
+                indicator.classList.add('d-none');
             }
         }
     }

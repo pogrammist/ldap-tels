@@ -1,41 +1,11 @@
 @model IEnumerable<ContactViewModel>
-@{
-    var contacts = Model.ToList();
-    bool hasNoDivisionNoDeptContacts = contacts.Any(c => string.IsNullOrWhiteSpace(c.Division) && string.IsNullOrWhiteSpace(c.Department));
-    bool insertedBlankForNoDivNoDept = false;
-}
 
 @foreach (var contact in Model)
 {
-    var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
-    var hasDepartment = !string.IsNullOrWhiteSpace(contact.Department);
+    var divisionValue = contact.Division ?? string.Empty;
+    var departmentValue = contact.Department ?? string.Empty;
 
-    // Если это первый контакт без подразделения и отдела, создаем отдельную таблицу
-    if (!hasDivision && !hasDepartment && !insertedBlankForNoDivNoDept)
-    {
-        insertedBlankForNoDivNoDept = true;
-        // Закрываем предыдущую таблицу и создаем новую
-        @:</tbody>
-        @:</table>
-        @:</div>
-        @:<div class="mb-4"></div>
-        @:<div class="table-responsive table-card">
-        @:<table class="table table-striped table-hover">
-        @:<thead>
-        @:<tr>
-        @:<th colspan="4">Без подразделения и отдела</th>
-        @:</tr>
-        @:<tr>
-        @:<th>ФИО</th>
-        @:<th>Должность</th>
-        @:<th>Телефон</th>
-        @:<th>Email</th>
-        @:</tr>
-        @:</thead>
-        @:<tbody>
-    }
-
-    <tr>
+    <tr data-division="@divisionValue" data-department="@departmentValue">
         <td>@contact.DisplayName</td>
         <td>
             <a asp-action="Title" asp-route-title="@contact.Title">

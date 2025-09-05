@@ -29,18 +29,7 @@
         </div>
     }
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-warning">
-            Контакты не найдены.
-        </div>
-    }
-    else
-    {
-        <div id="contacts-container">
-            @await Html.PartialAsync("_ContactsTablePartial", Model)
-        </div>
-    }
+    <div id="contacts-container"></div>
 </div>
 
 @section Scripts {
