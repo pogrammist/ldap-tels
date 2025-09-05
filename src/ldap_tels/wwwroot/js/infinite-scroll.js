@@ -64,8 +64,8 @@ class InfiniteScroll {
             
             const data = await response.json();
             
-            if (typeof data.rows === 'string' && data.rows.trim().length > 0) {
-                this.renderRowsHtml(data.rows);
+            if (typeof data.html === 'string' && data.html.trim().length > 0) {
+                this.appendHtml(data.html);
                 this.currentPage = data.currentPage + 1;
                 this.hasMore = data.hasMore;
             } else {
@@ -101,132 +101,56 @@ class InfiniteScroll {
         return url.toString();
     }
     
-    renderRowsHtml(rowsHtml) {
-        const temp = document.createElement('tbody');
-        temp.innerHTML = rowsHtml;
-        const rows = Array.from(temp.querySelectorAll('tr'));
-        for (const row of rows) {
-            const division = (row.getAttribute('data-division') || '').trim();
-            const department = (row.getAttribute('data-department') || '').trim();
-
-            if (division) {
-                const { tbody } = this.getOrCreateDivisionTable(division);
-                this.ensureDepartmentHeaderIfNeeded(tbody, division, department);
-                tbody.appendChild(row);
-            } else if (!division && department) {
-                const tbody = this.getOrCreateDepartmentOnlyTable(department);
-                tbody.appendChild(row);
-            } else {
-                const tbody = this.getOrCreateNoneTable();
-                tbody.appendChild(row);
+    appendHtml(html) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        
+        // 1) Сливаем продолжения существующих таблиц по подразделению
+        const incomingDivisionWrappers = temp.querySelectorAll('div[data-division-wrapper]');
+        incomingDivisionWrappers.forEach(incoming => {
+            const division = incoming.getAttribute('data-division-wrapper');
+            const existing = this.container.querySelector(`div[data-division-wrapper="${CSS.escape(division)}"] tbody`);
+            const incomingTbody = incoming.querySelector('tbody');
+            if (existing && incomingTbody) {
+                while (incomingTbody.firstChild) existing.appendChild(incomingTbody.firstChild);
+                incoming.remove();
             }
-        }
-    }
+        });
 
-    getOrCreateDivisionTable(division) {
-        const tableId = `table-division-${encodeURIComponent(division)}`;
-        let wrapper = this.container.querySelector(`div[data-division-wrapper="${division}"]`);
-        if (!wrapper) {
-            // Отступ между таблицами
-            if (this.container.lastElementChild) {
-                const spacer = document.createElement('div');
-                spacer.className = 'mb-4';
-                this.container.appendChild(spacer);
+        // 2) Сливаем продолжения таблиц отделов без подразделения
+        const incomingDeptWrappers = temp.querySelectorAll('div[data-department-wrapper]');
+        incomingDeptWrappers.forEach(incoming => {
+            const department = incoming.getAttribute('data-department-wrapper');
+            const existing = this.container.querySelector(`div[data-department-wrapper="${CSS.escape(department)}"] tbody`);
+            const incomingTbody = incoming.querySelector('tbody');
+            if (existing && incomingTbody) {
+                while (incomingTbody.firstChild) existing.appendChild(incomingTbody.firstChild);
+                incoming.remove();
             }
-            wrapper = document.createElement('div');
-            wrapper.className = 'table-responsive table-card';
-            wrapper.setAttribute('data-division-wrapper', division);
-            const table = document.createElement('table');
-            table.className = 'table table-striped table-hover';
-            table.id = tableId;
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th colspan="4">
-                            <a href="/Home/Division?division=${encodeURIComponent(division)}" class="fw-bold text-decoration-none">${division}</a>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody data-last-department=""></tbody>
-            `;
-            wrapper.appendChild(table);
-            this.container.appendChild(wrapper);
+        });
+
+        // 3) Секция "Другие" (без подразделения и отдела) — всегда одна
+        const incomingNone = temp.querySelector('div[data-none-wrapper="true"] tbody');
+        const existingNone = this.container.querySelector('div[data-none-wrapper="true"] tbody');
+        if (incomingNone && existingNone) {
+            while (incomingNone.firstChild) existingNone.appendChild(incomingNone.firstChild);
+            // удалить пустую обертку из temp
+            const parent = incomingNone.closest('div[data-none-wrapper="true"]');
+            if (parent) parent.remove();
         }
-        const tbody = wrapper.querySelector('tbody');
-        return { wrapper, tbody };
+
+        // Добавляем отступ только если ещё осталось что добавлять и контейнер уже не пустой
+        if (temp.children.length > 0 && this.container.lastElementChild) {
+            const spacer = document.createElement('div');
+            spacer.className = 'mb-4';
+            this.container.appendChild(spacer);
+        }
+
+        // Переносим оставшиеся новые блоки внутрь контейнера
+        while (temp.firstChild) this.container.appendChild(temp.firstChild);
     }
 
-    ensureDepartmentHeaderIfNeeded(tbody, division, department) {
-        if (!department) return;
-        const lastDept = tbody.getAttribute('data-last-department') || '';
-        if (lastDept !== department) {
-            const headerRow = document.createElement('tr');
-            headerRow.className = 'table-light';
-            headerRow.innerHTML = `
-                <td colspan="4">
-                    <a href="/Home/Department?department=${encodeURIComponent(department)}" class="text-decoration-none">${department}</a>
-                </td>
-            `;
-            tbody.appendChild(headerRow);
-            tbody.setAttribute('data-last-department', department);
-        }
-    }
-
-    getOrCreateDepartmentOnlyTable(department) {
-        let wrapper = this.container.querySelector(`div[data-department-wrapper="${department}"]`);
-        if (!wrapper) {
-            if (this.container.lastElementChild) {
-                const spacer = document.createElement('div');
-                spacer.className = 'mb-4';
-                this.container.appendChild(spacer);
-            }
-            wrapper = document.createElement('div');
-            wrapper.className = 'table-responsive table-card';
-            wrapper.setAttribute('data-department-wrapper', department);
-            const table = document.createElement('table');
-            table.className = 'table table-striped table-hover';
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th colspan="4">
-                            <a href="/Home/Department?department=${encodeURIComponent(department)}" class="text-decoration-none">${department}</a>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            `;
-            wrapper.appendChild(table);
-            this.container.appendChild(wrapper);
-        }
-        return wrapper.querySelector('tbody');
-    }
-
-    getOrCreateNoneTable() {
-        let wrapper = this.container.querySelector('div[data-none-wrapper="true"]');
-        if (!wrapper) {
-            if (this.container.lastElementChild) {
-                const spacer = document.createElement('div');
-                spacer.className = 'mb-4';
-                this.container.appendChild(spacer);
-            }
-            wrapper = document.createElement('div');
-            wrapper.className = 'table-responsive table-card';
-            wrapper.setAttribute('data-none-wrapper', 'true');
-            const table = document.createElement('table');
-            table.className = 'table table-striped table-hover';
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th colspan="4">Другие</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            `;
-            wrapper.appendChild(table);
-            this.container.appendChild(wrapper);
-        }
-        return wrapper.querySelector('tbody');
-    }
+    // Все сложные клиентские построения удалены — сервер отдаёт готовую разметку
     
     addLoadingIndicator() {
         const indicator = document.createElement('div');

@@ -144,12 +144,12 @@ public class HomeController : Controller
 
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            // Возвращаем HTML строк таблицы, чтобы совпадал рендер с серверной разметкой
-            var rowsHtml = await this.RenderViewAsync("_ContactRowsPartial", contacts, true);
+            // Рендер полной разметки таблиц на сервере для простого аппенда на клиенте
+            var html = await this.RenderViewAsync("_ContactsTablePartial", contacts, true);
 
             return Json(new
             {
-                rows = rowsHtml,
+                html,
                 currentPage = page,
                 totalPages = totalPages,
                 totalCount = totalCount,
