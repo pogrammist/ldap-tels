@@ -3,9 +3,10 @@
     var contacts = Model.ToList();
     int i = 0;
     bool firstTableRendered = false;
+    int noneStartIndex = contacts.FindIndex(c => string.IsNullOrWhiteSpace(c.Division) && string.IsNullOrWhiteSpace(c.Department));
 }
 
-@while (i < contacts.Count)
+@while (i < contacts.Count && (noneStartIndex == -1 || i < noneStartIndex))
 {
     var contact = contacts[i];
     var hasDivision = !string.IsNullOrWhiteSpace(contact.Division);
@@ -123,45 +124,51 @@
     }
     else
     {
-        // Остаток: контакты без подразделения и без отдела — одна итоговая таблица
-        <div class="table-responsive table-card">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th colspan="4">Без подразделения и отдела</th>
-                    </tr>
-                    <tr>
-                        <th>ФИО</th>
-                        <th>Должность</th>
-                        <th>Телефон</th>
-                        <th>Email</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @while (i < contacts.Count && string.IsNullOrWhiteSpace(contacts[i].Division) && string.IsNullOrWhiteSpace(contacts[i].Department))
-                    {
-                        var row = contacts[i];
-                        <tr>
-                            <td>@row.DisplayName</td>
-                            <td>
-                                <a asp-action="Title" asp-route-title="@row.Title">
-                                    @row.Title
-                                </a>
-                            </td>
-                            <td>@row.PhoneNumber</td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(row.Email))
-                                {
-                                    <a href="mailto:@row.Email">@row.Email</a>
-                                }
-                            </td>
-                        </tr>
-                        i++;
-                    }
-                </tbody>
-            </table>
-        </div>
-        firstTableRendered = true;
-        continue;
+        // Если дошли до блока без подразделения и отдела, прерываем цикл — отрисуем его отдельно в конце
+        break;
     }
+}
+
+@if (noneStartIndex >= 0)
+{
+    if (firstTableRendered)
+    {
+        <div class="mb-4"></div>
+    }
+    <div class="table-responsive table-card">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th colspan="4">Без подразделения и отдела</th>
+                </tr>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Должность</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var j = noneStartIndex; j < contacts.Count && string.IsNullOrWhiteSpace(contacts[j].Division) && string.IsNullOrWhiteSpace(contacts[j].Department); j++)
+                {
+                    var row = contacts[j];
+                    <tr>
+                        <td>@row.DisplayName</td>
+                        <td>
+                            <a asp-action="Title" asp-route-title="@row.Title">
+                                @row.Title
+                            </a>
+                        </td>
+                        <td>@row.PhoneNumber</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(row.Email))
+                            {
+                                <a href="mailto:@row.Email">@row.Email</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
