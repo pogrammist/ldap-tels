@@ -9,7 +9,7 @@ class InfiniteList {
             clearSelector: '#clearSearchBtn',
             ...options
         };
-
+        
         this.currentPage = 1;
         this.isLoading = false;
         this.hasMore = true;
@@ -19,13 +19,13 @@ class InfiniteList {
         this.division = urlParams.get('division');
         this.title = urlParams.get('title');
         this.query = urlParams.get('query');
-
+        
         this.init();
     }
-
+    
     init() {
         if (!this.container) return;
-
+        
         window.addEventListener('scroll', this.handleScroll.bind(this));
         this.addLoadingIndicator();
         this.hookSearchControls();
@@ -70,7 +70,7 @@ class InfiniteList {
             });
         }
     }
-
+    
     handleScroll() {
         if (this.isLoading || !this.hasMore) return;
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -89,7 +89,7 @@ class InfiniteList {
         }
         this.loadMore();
     }
-
+    
     async loadMore() {
         if (this.isLoading) return;
         this.isLoading = true;
@@ -114,7 +114,7 @@ class InfiniteList {
             this.hideLoading();
         }
     }
-
+    
     buildApiUrl() {
         const url = new URL('/api/contacts', window.location.origin);
         url.searchParams.set('page', this.currentPage);
@@ -168,7 +168,7 @@ class InfiniteList {
         }
         while (temp.firstChild) this.container.appendChild(temp.firstChild);
     }
-
+    
     addLoadingIndicator() {
         const indicator = document.createElement('div');
         indicator.id = 'loading-indicator';
@@ -181,7 +181,7 @@ class InfiniteList {
         `;
         this.container.appendChild(indicator);
     }
-
+    
     showLoading() {
         const indicator = document.getElementById('loading-indicator');
         if (indicator) indicator.classList.remove('d-none');
