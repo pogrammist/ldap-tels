@@ -13,7 +13,7 @@
     <h1 class="mb-3">Контакты</h1>
     <div class="d-flex align-items-stretch flex-wrap">
         <form asp-action="SearchContacts" method="get" class="d-flex flex-grow-1 me-2 mb-2 mb-md-0">
-            <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
+            <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск" value="@ViewBag.SearchQuery" id="liveSearchInput">
             <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0">Очистить</button>
         </form>
         <a href="/Admin/Home/CreateContact" class="btn btn-primary">

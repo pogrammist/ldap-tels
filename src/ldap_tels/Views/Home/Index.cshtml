@@ -6,35 +6,16 @@
 }
 
 <div class="container">
-    <h1 class="mb-4">Телефонный справочник</h1>
+    <h1 class="mb-4">Контакты</h1>
 
     <div class="row mb-4">
         <div class="col d-flex align-items-stretch">
-            <form asp-action="Search" method="get" class="d-flex flex-grow-1 me-2">
-                <input type="text" name="query" class="form-control flex-grow-1 me-2" placeholder="Поиск по имени, отделу, телефону..." value="@ViewBag.SearchQuery" id="liveSearchInput">
-                <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0">Очистить</button>
+            <form asp-action="Search" method="get" class="d-flex flex-grow-1">
+                <input type="text" name="query" class="form-control flex-grow-1 search-shadow" placeholder="Поиск" value="@ViewBag.SearchQuery" id="liveSearchInput">
+                <button type="button" id="clearSearchBtn" class="btn btn-primary flex-shrink-0 ms-2 search-shadow">Х</button>
             </form>
-            <a asp-action="Divisions" class="btn btn-outline-secondary me-2 flex-shrink-0">Подразделения</a>
-            <a asp-action="Departments" class="btn btn-outline-secondary me-2 flex-shrink-0">Отделы</a>
-            <a asp-action="Titles" class="btn btn-outline-secondary flex-shrink-0">Должности</a>
         </div>
     </div>
-
-    @if (ViewBag.Department != null)
-    {
-        <div class="alert alert-info">
-            Отдел: @ViewBag.Department
-            <a asp-action="Index" class="float-end">Сбросить фильтр</a>
-        </div>
-    }
-
-    @if (ViewBag.SearchQuery != null)
-    {
-        <div class="alert alert-info">
-            Результаты поиска для: "@ViewBag.SearchQuery"
-            <a asp-action="Index" class="float-end">Сбросить поиск</a>
-        </div>
-    }
 
     <div id="contacts-container"></div>
 </div>

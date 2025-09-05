@@ -59,6 +59,16 @@ body {
   overflow: hidden;
 }
 
+/* Тень как у таблиц — для поля поиска и кнопки сброса */
+.search-shadow {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: box-shadow 0.3s ease-in-out;
+}
+.search-shadow:focus,
+.search-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
 /* Стили для пагинации */
 .pagination {
   margin-bottom: 0;
